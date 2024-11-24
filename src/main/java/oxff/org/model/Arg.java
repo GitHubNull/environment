@@ -1,5 +1,8 @@
 package oxff.org.model;
 
+import groovy.lang.Script;
+
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 public class Arg {
@@ -7,9 +10,13 @@ public class Arg {
     String name;
     ArgType type;
     AutoUpdateType autoUpdateType;
+    int length;
     String defaultValue;
     String value;
+    Method method;
+    Script script;
     String codePath;
+    boolean enabled = true;
     String description;
 
     public Arg() {
@@ -57,6 +64,14 @@ public class Arg {
         this.autoUpdateType = autoUpdateType;
     }
 
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
     public String getDefaultValue() {
         return defaultValue;
     }
@@ -73,12 +88,36 @@ public class Arg {
         this.value = value;
     }
 
+    public void setMethod(Method method) {
+        this.method = method;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public Script getScript() {
+        return script;
+    }
+
+    public void setScript(Script script) {
+        this.script = script;
+    }
+
     public String getCodePath() {
         return codePath;
     }
 
     public void setCodePath(String codePath) {
         this.codePath = codePath;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String getDescription() {

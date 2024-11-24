@@ -8,8 +8,6 @@ import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +17,7 @@ public class PopUpMenu implements ContextMenuItemsProvider {
     MontoyaApi montoyaApi;
     Logging logger;
 
-    private Color[] buildin_colors = {
+    private final static Color[] build_in_colors = {
             Color.BLUE,
             Color.CYAN,
             Color.GRAY,
@@ -31,7 +29,7 @@ public class PopUpMenu implements ContextMenuItemsProvider {
             Color.YELLOW
     };
 
-    private HighlightColor[] highlightColors = {
+    private final static HighlightColor[] highlightColors = {
             HighlightColor.BLUE,
             HighlightColor.CYAN,
             HighlightColor.GRAY,
@@ -43,8 +41,8 @@ public class PopUpMenu implements ContextMenuItemsProvider {
             HighlightColor.YELLOW
     };
 
-    private final HashMap<String, Color> nameColors = new HashMap<>();
-    private final HashMap<Color, HighlightColor> colorHighlightColorHashMap = new HashMap<>();
+    private final static HashMap<String, Color> nameColors = new HashMap<>();
+    private final static HashMap<Color, HighlightColor> colorHighlightColorHashMap = new HashMap<>();
 
     private final String[] colorNames = {"BLUE", "CYAN", "GRAY", "GREEN", "MAGENTA", "ORANGE", "PINK", "RED", "YELLOW"};
 
@@ -52,9 +50,9 @@ public class PopUpMenu implements ContextMenuItemsProvider {
         this.montoyaApi = montoyaApi;
         logger = montoyaApi.logging();
 
-        for (int i = 0; i < buildin_colors.length; i++) {
-            nameColors.put(colorNames[i], buildin_colors[i]);
-            colorHighlightColorHashMap.put(buildin_colors[i], highlightColors[i]);
+        for (int i = 0; i < build_in_colors.length; i++) {
+            nameColors.put(colorNames[i], build_in_colors[i]);
+            colorHighlightColorHashMap.put(build_in_colors[i], highlightColors[i]);
         }
     }
     @Override

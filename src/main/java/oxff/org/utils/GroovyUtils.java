@@ -2,6 +2,7 @@ package oxff.org.utils;
 
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import oxff.org.Environment;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,12 +33,12 @@ public class GroovyUtils {
             // 使用新的字符串构造函数将字节数据转换为字符串
             content = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         } catch (IOException e) {
-            e.printStackTrace();
+            Environment.logger.logToError("Error reading file: " + e.getMessage());
         }
         return content;
     }
 
-    public static String executeGroovyCode(String codeFilePath, String name, String srcValue) throws IOException {
+    public static String executeGroovyCode(String codeFilePath, String name, String oriValue) throws IOException {
         // execute groovy code
         if (null == codeFilePath || codeFilePath.isEmpty() || codeFilePath.trim().isEmpty()){
             return "";
@@ -45,13 +46,22 @@ public class GroovyUtils {
         GroovyShell shell = new GroovyShell();
         Script script = shell.parse(new File(codeFilePath));
         Map<String, String> args = new HashMap<>();
-        args.put(name, srcValue);
+        args.put(name, oriValue);
 
         try{
             return (String)script.invokeMethod("modifyArg", args);
         }catch (Exception e){
-            e.printStackTrace();
-            return "";
+            Environment.logger.logToError("Error executing groovy code: " + e.getMessage());
+            return oriValue;
         }
+    }
+
+    public static  Script getScript(String codeFilePath) throws IOException {
+        // execute groovy code
+        if (null == codeFilePath || codeFilePath.isEmpty() || codeFilePath.trim().isEmpty()){
+            return null;
+        }
+        GroovyShell shell = new GroovyShell();
+        return shell.parse(new File(codeFilePath));
     }
 }
