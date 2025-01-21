@@ -27,7 +27,7 @@ public class EnvironmentTab extends JPanel {
     private JButton moveDownButton;
 
     private JTable argTable;
-    private ArgTableModel argTableModel;
+    private final ArgTableModel argTableModel;
 
     private  JLabel statusLabel;
     Logging logger;
@@ -142,14 +142,4 @@ public class EnvironmentTab extends JPanel {
     public ArgTableModel getArgTableModel() {
         return argTableModel;
     }
-
-//    public static void main(String[] args) {
-//        JFrame frame = new JFrame("EnvironmentTab");
-//        frame.setContentPane(new EnvironmentTab());
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        frame.pack();
-//        frame.setLocationRelativeTo(null);
-//        frame.setVisible(true);
-//    }
-
 }

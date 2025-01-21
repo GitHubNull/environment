@@ -385,22 +385,25 @@ public class ArgDialog extends JDialog {
             }
             arg.setMethod(method);
 
-            String lengthStr = argLengthTextField.getText();
-            if (null == lengthStr || lengthStr.isEmpty() || lengthStr.isBlank()) {
-                JOptionPane.showMessageDialog(null, "arg length is empty");
-                return;
-            }
-            int length;
-            try {
-                length = Integer.parseInt(lengthStr);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "arg length is invalid");
-                logger.logToError(e);
-                return;
-            }
-            if (length < 1) {
-                JOptionPane.showMessageDialog(null, "arg length is invalid");
-                return;
+            if (Tools.needParams(autoUpdateType)) {
+                String lengthStr = argLengthTextField.getText();
+                if (null == lengthStr || lengthStr.isEmpty() || lengthStr.isBlank()) {
+                    JOptionPane.showMessageDialog(null, "arg length is empty");
+                    return;
+                }
+                int length;
+                try {
+                    length = Integer.parseInt(lengthStr);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null, "arg length is invalid");
+                    logger.logToError(e);
+                    return;
+                }
+                if (length < 1) {
+                    JOptionPane.showMessageDialog(null, "arg length is invalid");
+                    return;
+                }
+                arg.setLength(length);
             }
         }
 

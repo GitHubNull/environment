@@ -8,18 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArgTableModel extends AbstractTableModel {
-    //    int id;
-//    String name;
-//    ArgType type;
-//    AutoUpdateType autoUpdateType;
-//    int length;
-//    String defaultValue;
-//    String value;
-//    Method method;
-//    Script script;
-//    String codePath;
-//    boolean enabled = true;
-//    String description;
     private final static String[] columnNames = {
             "ID", "Name", "Type", "AutoUpdateType", "Length", "DefaultValue", "Value", "Method", "Script", "CodePath",
             "Enable", "Description"
@@ -47,34 +35,21 @@ public class ArgTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         Arg arg = argList.get(rowIndex);
-        switch (columnIndex) {
-            case 0:
-                return arg.getId();
-            case 1:
-                return arg.getName();
-            case 2:
-                return arg.getType().toString();
-            case 3:
-                return arg.getAutoUpdateType().toString();
-            case 4:
-                return 0 == arg.getLength() ? "" : arg.getLength();
-            case 5:
-                return null == arg.getDefaultValue() ? "" : arg.getDefaultValue();
-            case 6:
-                return null == arg.getValue() ? "" : arg.getDefaultValue();
-            case 7:
-                return null == arg.getMethod() ? "" : arg.getMethod().toString();
-            case 8:
-                return null == arg.getScript() ? "" : arg.getScript().toString();
-            case 9:
-                return null == arg.getCodePath() ? "" : arg.getCodePath();
-            case 10:
-                return arg.isEnabled();
-            case 11:
-                return null == arg.getDescription() ? "" : arg.getDescription();
-            default:
-                return null;
-        }
+        return switch (columnIndex) {
+            case 0 -> arg.getId();
+            case 1 -> arg.getName();
+            case 2 -> arg.getType().toString();
+            case 3 -> arg.getAutoUpdateType().toString();
+            case 4 -> 0 == arg.getLength() ? "" : arg.getLength();
+            case 5 -> null == arg.getDefaultValue() ? "" : arg.getDefaultValue();
+            case 6 -> null == arg.getValue() ? "" : arg.getDefaultValue();
+            case 7 -> null == arg.getMethod() ? "" : arg.getMethod().toString();
+            case 8 -> null == arg.getScript() ? "" : arg.getScript().toString();
+            case 9 -> null == arg.getCodePath() ? "" : arg.getCodePath();
+            case 10 -> arg.isEnabled();
+            case 11 -> null == arg.getDescription() ? "" : arg.getDescription();
+            default -> null;
+        };
     }
 
     @Override
@@ -89,34 +64,14 @@ public class ArgTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        switch (columnIndex) {
-            case 0:
-                return Integer.class;
-            case 1:
-                return String.class;
-            case 2:
-                return ArgType.class;
-            case 3:
-                return AutoUpdateType.class;
-            case 4:
-                return Integer.class;
-            case 5:
-                return String.class;
-            case 6:
-                return String.class;
-            case 7:
-                return String.class;
-            case 8:
-                return String.class;
-            case 9:
-                return String.class;
-            case 10:
-                return Boolean.class;
-            case 11:
-                return String.class;
-            default:
-                return null;
-        }
+        return switch (columnIndex) {
+            case 0, 4 -> Integer.class;
+            case 1, 5, 6, 7, 8, 9, 11 -> String.class;
+            case 2 -> ArgType.class;
+            case 3 -> AutoUpdateType.class;
+            case 10 -> Boolean.class;
+            default -> null;
+        };
     }
 
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
@@ -137,8 +92,6 @@ public class ArgTableModel extends AbstractTableModel {
             case 4:
                 arg.setLength((int) aValue);
                 break;
-            case 5:
-                break;
             case 6:
                 arg.setValue((String) aValue);
                 break;
@@ -157,6 +110,7 @@ public class ArgTableModel extends AbstractTableModel {
             case 11:
                 arg.setDescription((String) aValue);
                 break;
+            case 5:
             default:
                 break;
 

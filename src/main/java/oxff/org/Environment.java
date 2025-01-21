@@ -67,7 +67,7 @@ public class Environment implements BurpExtension {
         }
 
         try {
-            autoUpdateMethods.put(AutoUpdateType.RANDOM_NUMBER, Tools.class.getMethod("getRandomNumber", int.class));
+            autoUpdateMethods.put(AutoUpdateType.RANDOM_NUMBER, Tools.class.getMethod("getRandomNumber", Integer.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
