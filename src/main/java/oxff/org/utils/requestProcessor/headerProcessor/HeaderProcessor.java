@@ -29,7 +29,7 @@ public class HeaderProcessor {
         for (HttpHeader header : headers) {
             String headerName = header.name();
             String headerValue = header.value();
-            if (Tools.isMarker(headerValue)) {
+            if (!Tools.isMarker(headerValue)) {
                 result.add(header);
                 continue;
             }

@@ -71,7 +71,7 @@ public class Tools {
     }
 
     public static boolean isMarker(String input) {
-        return !input.contains(GlobalConst.LEFT_MARKER) || !input.contains(GlobalConst.RIGHT_MARKER);
+        return input.contains(GlobalConst.LEFT_MARKER) && input.contains(GlobalConst.RIGHT_MARKER);
     }
 
     public static boolean isMarker(ByteArray body){

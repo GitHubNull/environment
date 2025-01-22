@@ -3,6 +3,7 @@ package oxff.org.utils.requestProcessor.bodyProcessor;
 import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
+import oxff.org.model.ArgType;
 import oxff.org.model.AutoUpdateType;
 import oxff.org.model.VariableInfo;
 import oxff.org.utils.Tools;
@@ -12,8 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import static oxff.org.Environment.GROOVY_FUNCTION_NAME;
+import static oxff.org.Environment.*;
 
 public class MultipartBodyProcessor {
     /**
@@ -72,6 +74,7 @@ public class MultipartBodyProcessor {
         byte[] newLineBytes = "\r\n".getBytes(StandardCharsets.UTF_8);
         ByteArrayBuilder result = new ByteArrayBuilder();
 
+        HashMap<String, Arg> processedArgs = new HashMap<>();
         int start = 0;
         while (true) {
             int boundaryIndex = indexOf(requestBodyBytes, boundaryBytes, start);
@@ -105,10 +108,10 @@ public class MultipartBodyProcessor {
                 }
 
                 String content = new String(requestBodyBytes, start, contentEndIndex - start, StandardCharsets.UTF_8);
-                List<VariableInfo> variables = Tools.extractBodyVariableInfos(content);
-                for (VariableInfo variable : variables) {
-                    String name = variable.name;
-                    String value = content.substring(variable.startIndex, variable.endIndex);
+                VariableInfo variableInfo = Tools.extractBodyOneVariableInfo(content);
+                while (null != variableInfo) {
+                    String name = variableInfo.name;
+                    String value = content.substring(variableInfo.startIndex, variableInfo.endIndex);
 
                     Arg arg = Environment.argsMap.get(name);
                     if (null == arg || !arg.isEnabled()) {
@@ -152,7 +155,9 @@ public class MultipartBodyProcessor {
                             }
                         }
                     }
-                    content = Tools.replaceSubstring(content, variable.startIndex, variable.endIndex, newValue);
+                    String replaceStr = "\\{\\{" + name + "\\}\\}";
+                    content = content.replaceAll(replaceStr, newValue);
+                    variableInfo = Tools.extractBodyOneVariableInfo(content);
                 }
 
                 result.append(partHeaders.getBytes(StandardCharsets.UTF_8));

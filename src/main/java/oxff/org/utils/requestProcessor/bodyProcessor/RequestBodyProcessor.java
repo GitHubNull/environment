@@ -59,7 +59,7 @@ public class RequestBodyProcessor {
                 return TextBodyProcessor.replacePlaceholdersInTextBody(requestBody);
             } else if (contentType.startsWith("application/x-www-form-urlencoded")) {
                 // 调用 FormBodyProcessor 进行表单类型请求体的占位符替换
-                return FormBodyProcessor.replacePlaceholdersInForm(requestBody);
+                return TextBodyProcessor.replacePlaceholdersInTextBody(requestBody);
             } else {
                 // 如果 Content-Type 不支持，返回原始请求体
                 return requestBody;

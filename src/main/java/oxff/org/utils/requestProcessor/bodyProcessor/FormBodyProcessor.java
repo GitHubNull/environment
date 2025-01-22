@@ -37,7 +37,7 @@ public class FormBodyProcessor {
                 }
                 String key = URLDecoder.decode(keyValue[0].strip().trim(), StandardCharsets.UTF_8);
                 String value = URLDecoder.decode(keyValue[1].strip().trim(), StandardCharsets.UTF_8);
-                if (Tools.isMarker(value)) {
+                if (!Tools.isMarker(value)) {
                     result.put(key, URLEncoder.encode(value, StandardCharsets.UTF_8));
                     continue;
                 }

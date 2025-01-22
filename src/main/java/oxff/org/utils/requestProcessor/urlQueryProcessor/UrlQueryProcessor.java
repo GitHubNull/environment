@@ -29,7 +29,7 @@ public class UrlQueryProcessor {
             String[] queryItemArray = queryItem.split("=");
             String queryItemName = queryItemArray[0];
             String queryItemValue = queryItemArray[1];
-            if (Tools.isMarker(queryItemValue)) {
+            if (!Tools.isMarker(queryItemValue)) {
                 queryMap.put(queryItemName, queryItemValue);
                 continue;
             }

@@ -45,13 +45,13 @@ public class ArgDialog extends JDialog {
     private JTextField argDescriptionTextField;
     private JButton okButton;
     private JButton cancelButton;
-    int currentArgCnt;
+    int maxArgId;
     EnvironmentTab enviTab;
 
-    public ArgDialog(ArgDialogOpType argDialogOpType, Logging logger, int currentArgCnt, EnvironmentTab enviTab) {
+    public ArgDialog(ArgDialogOpType argDialogOpType, Logging logger, int maxArgId, EnvironmentTab enviTab) {
         this.argDialogOpType = argDialogOpType;
         this.logger = logger;
-        this.currentArgCnt = currentArgCnt;
+        this.maxArgId = maxArgId;
         this.enviTab = enviTab;
 
         initUI();
@@ -76,7 +76,7 @@ public class ArgDialog extends JDialog {
 
         argNameLabel = new JLabel("arg name: ");
         argNameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        argNameTextField = new JTextField("argName_" + currentArgCnt);
+        argNameTextField = new JTextField("argName_" + maxArgId);
         northPanel.add(argNameLabel);
         northPanel.add(argNameTextField);
         northPanel.add(new JLabel());
@@ -303,6 +303,7 @@ public class ArgDialog extends JDialog {
 
     private void addArgProcess() {
         Arg arg = new Arg();
+        arg.setId(maxArgId + 1);
 
         String name = argNameTextField.getText();
         if (null == name || name.isEmpty() || name.isBlank()) {

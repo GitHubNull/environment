@@ -12,7 +12,9 @@ public class ArgTableModel extends AbstractTableModel {
             "ID", "Name", "Type", "AutoUpdateType", "Length", "DefaultValue", "Value", "Method", "Script", "CodePath",
             "Enable", "Description"
     };
-    private final List<Arg> argList;
+    private List<Arg> argList;
+    private List<Arg> tmpArgList;
+    private int hadQueryCnt;
 
     public ArgTableModel() {
         argList = new ArrayList<>();
@@ -20,6 +22,8 @@ public class ArgTableModel extends AbstractTableModel {
 
     public ArgTableModel(List<Arg> argList) {
         this.argList = argList;
+        tmpArgList = new ArrayList<>(argList);
+        hadQueryCnt = 0;
     }
 
     @Override
@@ -159,4 +163,50 @@ public class ArgTableModel extends AbstractTableModel {
         fireTableRowsUpdated(row, row);
     }
 
+    public void moveUp(int row){
+        if(row > 0){
+            Arg arg = argList.get(row);
+            argList.remove(row);
+            argList.add(row - 1, arg);
+            fireTableRowsUpdated(row - 1, row);
+        }
+    }
+
+    public void moveDown(int row){
+        if(row < argList.size() - 1){
+            Arg arg = argList.get(row);
+            argList.remove(row);
+            argList.add(row + 1, arg);
+            fireTableRowsUpdated(row, row + 1);
+        }
+    }
+
+    public void setArgList(List<Arg> filteredArgs) {
+        argList.clear();
+        argList.addAll(filteredArgs);
+    }
+
+    public void filterArgsByName(String keyword){
+        if (keyword.isEmpty() || keyword.isBlank()){
+            return;
+        }
+        tmpArgList = new ArrayList<>(argList);
+        List<Arg> filteredArgs = new ArrayList<>();
+        for (Arg arg : tmpArgList) {
+            if (arg.getName().contains(keyword) || arg.getName().equals(keyword)) {
+                filteredArgs.add(arg);
+            }
+        }
+        hadQueryCnt++;
+        setArgList(filteredArgs);
+        fireTableDataChanged();
+    }
+
+    public void restoreArgs(){
+        if (null != tmpArgList && hadQueryCnt > 0){
+            setArgList(tmpArgList);
+            fireTableDataChanged();
+        }
+        hadQueryCnt = 0;
+    }
 }

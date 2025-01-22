@@ -34,7 +34,7 @@ public class UrlPathProcessor {
         List<String> result = new ArrayList<>();
 
         for (String pathSegment : pathSegments) {
-            if (Tools.isMarker(pathSegment)) {
+            if (!Tools.isMarker(pathSegment)) {
                 result.add(pathSegment);
                 continue;
             }

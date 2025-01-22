@@ -2,12 +2,15 @@ package oxff.org.ui;
 
 import burp.api.montoya.logging.Logging;
 import oxff.org.Environment;
+import oxff.org.model.Arg;
 import oxff.org.model.ArgDialogOpType;
 import oxff.org.model.ArgTableModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class EnvironmentTab extends JPanel {
     private JPanel northPanel;
@@ -87,7 +90,17 @@ public class EnvironmentTab extends JPanel {
 
         addButton.addActionListener(e -> {
             int cnt = Environment.getArgListSize();
-            ArgDialog argDialog = new ArgDialog(ArgDialogOpType.ADD, logger, cnt, EnvironmentTab.this);
+            int maxtArgId = 0;
+            if (cnt != 0){
+                // get max id value
+                for (int i = 0; i < argTableModel.getArgList().size(); i++) {
+                    Arg arg = argTableModel.getArg(i);
+                    if (arg.getId() > maxtArgId){
+                        maxtArgId = arg.getId();
+                    }
+                }
+            }
+            ArgDialog argDialog = new ArgDialog(ArgDialogOpType.ADD, logger, maxtArgId, EnvironmentTab.this);
             argDialog.setVisible(true);
         });
 
@@ -104,8 +117,9 @@ public class EnvironmentTab extends JPanel {
            }
            for (int i = selectedRows.length - 1; i >= 0; i--) {
                int row = selectedRows[i];
-               int argId = (int) argTableModel.getValueAt(row, 0);
-               Environment.args.removeIf(arg -> arg.getId() == argId);
+               argTableModel.removeArg(row);
+//               int argId = (int) argTableModel.getValueAt(row, 0);
+//               Environment.args.removeIf(arg -> arg.getId() == argId);
 //               argTableModel.removeRow(row);
            }
         });
@@ -115,7 +129,7 @@ public class EnvironmentTab extends JPanel {
             if (JOptionPane.showConfirmDialog(null, "Are you sure you want to clear all arguments?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
             }
-            Environment.args.clear();
+            argTableModel.removeAll();
         });
 
         editButton.addActionListener(e -> {
@@ -129,17 +143,58 @@ public class EnvironmentTab extends JPanel {
         });
 
         queryButton.addActionListener(e -> {
-
+            String searchKey = searchField.getText().trim();
+            if (searchKey.isEmpty() || searchKey.isBlank()){
+                logger.logToError("Please input search key.");
+                // 恢复原始数据
+                argTableModel.restoreArgs();
+                return;
+            }
+            argTableModel.filterArgsByName(searchKey);
         });
 
         moveUpButton.addActionListener(e -> {
-
+            int[] selectedRows = argTable.getSelectedRows();
+            if (selectedRows.length != 1){
+                logger.logToError("Please select one row to move up.");
+                return;
+            }
+            int row = selectedRows[0];
+            if (row == 0){
+                logger.logToError("This is the first row, can not move up.");
+                return;
+            }
+            argTableModel.moveUp(row);
+            argTable.setRowSelectionInterval(row - 1, row - 1);
         });
 
-        moveDownButton.addActionListener(e -> {});
+        moveDownButton.addActionListener(e -> {
+            int[] selectedRows = argTable.getSelectedRows();
+            if (selectedRows.length != 1){
+                logger.logToError("Please select one row to move down.");
+                return;
+            }
+            int row = selectedRows[0];
+            if (row == argTableModel.getRowCount() - 1){
+                logger.logToError("This is the last row, can not move down.");
+                return;
+            }
+            argTableModel.moveDown(row);
+            argTable.setRowSelectionInterval(row + 1, row + 1);
+        });
     }
 
     public ArgTableModel getArgTableModel() {
         return argTableModel;
+    }
+
+    private List<Arg> filterArgsByName(String keyword) {
+        List<Arg> filteredArgs = new ArrayList<>();
+        for (Arg arg : argTableModel.getArgList()) {
+            if (arg.getName().contains(keyword) || arg.getName().equals(keyword)) {
+                filteredArgs.add(arg);
+            }
+        }
+        return filteredArgs;
     }
 }

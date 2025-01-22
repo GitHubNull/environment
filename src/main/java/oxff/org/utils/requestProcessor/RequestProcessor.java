@@ -27,7 +27,7 @@ public class RequestProcessor {
     }
 
     public String processPath(String pathWithoutQuery) {
-        if (null == pathWithoutQuery || (Tools.isMarker(pathWithoutQuery) || pathWithoutQuery.strip().trim().isEmpty())) {
+        if (null == pathWithoutQuery || (!Tools.isMarker(pathWithoutQuery) || pathWithoutQuery.strip().trim().isEmpty())) {
             return pathWithoutQuery;
         }
         return urlPathProcessor.processPath(pathWithoutQuery);
