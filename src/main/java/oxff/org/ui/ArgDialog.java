@@ -92,6 +92,7 @@ public class ArgDialog extends JDialog {
         argValueTextField.setText(arg.getValue());
         argCodePathTextField.setText(arg.getCodePath());
         argDescriptionTextField.setText(arg.getDescription());
+        enabledCheckBox.setSelected(arg.isEnabled());
     }
 
     private void initUIStatusByArgDialogOpType() {
