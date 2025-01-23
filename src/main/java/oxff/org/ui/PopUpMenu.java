@@ -42,7 +42,7 @@ public class PopUpMenu implements ContextMenuItemsProvider {
     };
 
     private final static HashMap<String, Color> nameColors = new HashMap<>();
-    private final static HashMap<Color, HighlightColor> colorHighlightColorHashMap = new HashMap<>();
+//    private final static HashMap<Color, HighlightColor> colorHighlightColorHashMap = new HashMap<>();
 
     private final String[] colorNames = {"BLUE", "CYAN", "GRAY", "GREEN", "MAGENTA", "ORANGE", "PINK", "RED", "YELLOW"};
 
@@ -52,7 +52,7 @@ public class PopUpMenu implements ContextMenuItemsProvider {
 
         for (int i = 0; i < build_in_colors.length; i++) {
             nameColors.put(colorNames[i], build_in_colors[i]);
-            colorHighlightColorHashMap.put(build_in_colors[i], highlightColors[i]);
+//            colorHighlightColorHashMap.put(build_in_colors[i], highlightColors[i]);
         }
     }
     @Override

@@ -32,7 +32,6 @@ public class Environment implements BurpExtension {
     public final static String  GROOVY_FUNCTION_NAME = "modify:";
 
     public static List<Arg> args;
-    public static List<Arg> tmpArgs;
 
     public static ArgTableModel argTableModel;
     public static Map<String, Arg> argsMap;
@@ -45,7 +44,6 @@ public class Environment implements BurpExtension {
         montoyaApi.extension().setName(extensionName);
 
         args = new ArrayList<>();
-        tmpArgs = new ArrayList<>();
 
         argTableModel = new ArgTableModel(args);
         argsMap = new HashMap<>();

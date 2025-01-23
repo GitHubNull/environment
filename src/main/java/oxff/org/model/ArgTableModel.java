@@ -12,9 +12,7 @@ public class ArgTableModel extends AbstractTableModel {
             "ID", "Name", "Type", "AutoUpdateType", "Length", "DefaultValue", "Value", "Method", "Script", "CodePath",
             "Enable", "Description"
     };
-    private List<Arg> argList;
-    private List<Arg> tmpArgList;
-    private int hadQueryCnt;
+    private final List<Arg> argList;
 
     public ArgTableModel() {
         argList = new ArrayList<>();
@@ -22,8 +20,6 @@ public class ArgTableModel extends AbstractTableModel {
 
     public ArgTableModel(List<Arg> argList) {
         this.argList = argList;
-        tmpArgList = new ArrayList<>(argList);
-        hadQueryCnt = 0;
     }
 
     @Override
@@ -184,29 +180,5 @@ public class ArgTableModel extends AbstractTableModel {
     public void setArgList(List<Arg> filteredArgs) {
         argList.clear();
         argList.addAll(filteredArgs);
-    }
-
-    public void filterArgsByName(String keyword){
-        if (keyword.isEmpty() || keyword.isBlank()){
-            return;
-        }
-        tmpArgList = new ArrayList<>(argList);
-        List<Arg> filteredArgs = new ArrayList<>();
-        for (Arg arg : tmpArgList) {
-            if (arg.getName().contains(keyword) || arg.getName().equals(keyword)) {
-                filteredArgs.add(arg);
-            }
-        }
-        hadQueryCnt++;
-        setArgList(filteredArgs);
-        fireTableDataChanged();
-    }
-
-    public void restoreArgs(){
-        if (null != tmpArgList && hadQueryCnt > 0){
-            setArgList(tmpArgList);
-            fireTableDataChanged();
-        }
-        hadQueryCnt = 0;
     }
 }

@@ -22,31 +22,29 @@ public class ArgDialog extends JDialog {
     //    JScrollPane centPanel;
     JPanel southPanel;
     Logging logger;
-    private JLabel argNameLabel;
+    int maxArgId;
+    EnvironmentTab enviTab;
+    int argListSize;
+    int selectedRow;
     private JTextField argNameTextField;
-    private JLabel argTypeLabel;
     private JComboBox<String> argTypeComboBox;
-    private JLabel autoUpdateTypeLabel;
     private JComboBox<String> autoUpdateTypeComboBox;
     private JLabel autoUpdateTypeExampleLabel;
     private JLabel argLengthLabel;
     private JTextField argLengthTextField;
-    private JLabel argDefaultValueLabel;
     private JTextField argDefaultValueTextField;
-    private JLabel argValueLabel;
     private JTextField argValueTextField;
     private JLabel argCodePathLabel;
     private JPanel codePathPanel;
     private JTextField argCodePathTextField;
     private JButton codePathButtonChooseFile;
-    private JLabel argDescriptionLabel;
 
-    //    JTextArea argCodeTextArea;
     private JTextField argDescriptionTextField;
+
+    private JCheckBox enabledCheckBox;
+
     private JButton okButton;
     private JButton cancelButton;
-    int maxArgId;
-    EnvironmentTab enviTab;
 
     public ArgDialog(ArgDialogOpType argDialogOpType, Logging logger, int maxArgId, EnvironmentTab enviTab) {
         this.argDialogOpType = argDialogOpType;
@@ -55,16 +53,81 @@ public class ArgDialog extends JDialog {
         this.enviTab = enviTab;
 
         initUI();
+        initData();
+        initUIStatusByArgDialogOpType();
         initActionListeners();
     }
 
     public ArgDialog(ArgDialogOpType argDialogOpType, Logging logger, int argListSize, int selectedRow) {
         this.argDialogOpType = argDialogOpType;
         this.logger = logger;
+        this.argListSize = argListSize;
+        this.selectedRow = selectedRow;
 
         initUI();
+        initData();
+        initUIStatusByArgDialogOpType();
         initActionListeners();
     }
+
+    private void initData() {
+        if (ArgDialogOpType.VIEW.equals(argDialogOpType) || ArgDialogOpType.EDIT.equals(argDialogOpType) ||
+                ArgDialogOpType.DELETE.equals(argDialogOpType)) {
+            logger.logToOutput("view arg");
+            initArgFiled();
+        } else if (ArgDialogOpType.ADD.equals(argDialogOpType)) {
+            logger.logToOutput("add arg");
+        } else {
+            logger.logToOutput("error");
+        }
+    }
+
+    private void initArgFiled() {
+        Arg arg = Environment.argTableModel.getArg(selectedRow);
+        argNameTextField.setText(arg.getName());
+        argTypeComboBox.setSelectedItem(arg.getType().toString());
+        autoUpdateTypeComboBox.setSelectedItem(arg.getAutoUpdateType().toString());
+        argLengthTextField.setText(String.valueOf(arg.getLength()));
+        argDefaultValueTextField.setText(arg.getDefaultValue());
+        argValueTextField.setText(arg.getValue());
+        argCodePathTextField.setText(arg.getCodePath());
+        argDescriptionTextField.setText(arg.getDescription());
+    }
+
+    private void initUIStatusByArgDialogOpType() {
+        switch (argDialogOpType) {
+            case ADD:
+            case EDIT:
+                enableAllFields(true);
+                enabledCheckBox.setSelected(true);
+                break;
+            case VIEW:
+            case DELETE:
+                disableAllFields();
+                break;
+            default:
+                // 处理未知的操作类型
+                throw new IllegalArgumentException("Unknown dialog operation type: " + argDialogOpType);
+        }
+    }
+
+    private void enableAllFields(boolean enable) {
+        argNameTextField.setEnabled(enable);
+        argTypeComboBox.setEnabled(enable);
+        autoUpdateTypeComboBox.setEnabled(enable);
+        argLengthTextField.setEnabled(enable);
+        argDefaultValueTextField.setEnabled(enable);
+        argValueTextField.setEnabled(enable);
+        argCodePathTextField.setEnabled(enable);
+        argDescriptionTextField.setEnabled(enable);
+        enabledCheckBox.setEnabled(enable);
+    }
+
+    private void disableAllFields() {
+        enableAllFields(false);
+        enabledCheckBox.setSelected(false);
+    }
+
 
     private void initUI() {
         setTitle(argDialogOpType.toString());
@@ -72,16 +135,16 @@ public class ArgDialog extends JDialog {
         setLayout(new BorderLayout());
 
         northPanel = new JPanel();
-        northPanel.setLayout(new GridLayout(8, 3));
+        northPanel.setLayout(new GridLayout(9, 3));
 
-        argNameLabel = new JLabel("arg name: ");
+        JLabel argNameLabel = new JLabel("arg name: ");
         argNameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argNameTextField = new JTextField("argName_" + maxArgId);
         northPanel.add(argNameLabel);
         northPanel.add(argNameTextField);
         northPanel.add(new JLabel());
 
-        argTypeLabel = new JLabel("arg type: ");
+        JLabel argTypeLabel = new JLabel("arg type: ");
         argTypeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argTypeComboBox = new JComboBox<>();
         argTypeComboBox.addItem("NUMBER");
@@ -91,7 +154,7 @@ public class ArgDialog extends JDialog {
         northPanel.add(new JLabel());
 
 
-        autoUpdateTypeLabel = new JLabel("auto update type: ");
+        JLabel autoUpdateTypeLabel = new JLabel("auto update type: ");
         autoUpdateTypeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         autoUpdateTypeComboBox = new JComboBox<>();
@@ -119,14 +182,14 @@ public class ArgDialog extends JDialog {
         northPanel.add(argLengthTextField);
         northPanel.add(new JLabel());
 
-        argDefaultValueLabel = new JLabel("defaultValue: ");
+        JLabel argDefaultValueLabel = new JLabel("defaultValue: ");
         argDefaultValueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argDefaultValueTextField = new JTextField("1");
         northPanel.add(argDefaultValueLabel);
         northPanel.add(argDefaultValueTextField);
         northPanel.add(new JLabel());
 
-        argValueLabel = new JLabel("arg value: ");
+        JLabel argValueLabel = new JLabel("arg value: ");
         argValueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argValueTextField = new JTextField("value...");
         northPanel.add(argValueLabel);
@@ -149,11 +212,23 @@ public class ArgDialog extends JDialog {
         northPanel.add(codePathPanel);
         northPanel.add(new JLabel());
 
-        argDescriptionLabel = new JLabel("description: ");
+        //    JTextArea argCodeTextArea;
+        JLabel argDescriptionLabel = new JLabel("description: ");
         argDescriptionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argDescriptionTextField = new JTextField("description...");
         northPanel.add(argDescriptionLabel);
         northPanel.add(argDescriptionTextField);
+        northPanel.add(new JLabel());
+
+        JLabel enabledLabel = new JLabel("enabled: ");
+        enabledLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        enabledCheckBox = new JCheckBox("enable");
+        enabledCheckBox.setEnabled(true);
+        enabledCheckBox.setSelected(true);
+
+        northPanel.add(enabledLabel);
+        northPanel.add(enabledCheckBox);
         northPanel.add(new JLabel());
 
         add(northPanel, BorderLayout.NORTH);
@@ -164,8 +239,10 @@ public class ArgDialog extends JDialog {
 
         okButton = new JButton("OK");
         okButton.setEnabled(false);
+
         cancelButton = new JButton("Cancel");
         cancelButton.setEnabled(true);
+
         southPanel.add(okButton);
         southPanel.add(cancelButton);
 
@@ -178,7 +255,6 @@ public class ArgDialog extends JDialog {
     }
 
     private void initActionListeners() {
-
 
         argNameTextField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
@@ -207,15 +283,50 @@ public class ArgDialog extends JDialog {
         okButton.addActionListener(e -> {
             if (argDialogOpType == ArgDialogOpType.ADD) {
                 addArgProcess();
+            } else if (argDialogOpType == ArgDialogOpType.EDIT) {
+                editArgProcess();
+            } else if (argDialogOpType == ArgDialogOpType.DELETE) {
+                deleteArgProcess();
+            } else {
+                logger.logToError("unknown argDialogOpType: " + argDialogOpType);
             }
+            dispose();
         });
 
         cancelButton.addActionListener(e -> dispose());
     }
 
+    private void deleteArgProcess() {
+    }
+
+    private void editArgProcess() {
+        if (!checkArgFields()) {
+            logger.logToError("arg fields are not valid");
+            return;
+        }
+        try {
+            Arg arg = new Arg();
+            arg.setId(Environment.argTableModel.getArg(selectedRow).getId());
+            arg.setName(argNameTextField.getText());
+            arg.setType(ArgType.getArgType(Objects.requireNonNull(argTypeComboBox.getSelectedItem()).toString()));
+            arg.setAutoUpdateType(AutoUpdateType.getAutoUpdateType(Objects.requireNonNull(autoUpdateTypeComboBox.getSelectedItem()).toString()));
+            arg.setLength(Integer.parseInt(argLengthTextField.getText()));
+            arg.setDefaultValue(argDefaultValueTextField.getText());
+            arg.setValue(argValueTextField.getText());
+            arg.setCodePath(argCodePathTextField.getText());
+            arg.setDescription(argDescriptionTextField.getText());
+            arg.setEnabled(enabledCheckBox.isSelected());
+            Environment.argTableModel.updateArg(selectedRow, arg);
+            Environment.argsMap.put(arg.getName(), arg);
+            logger.logToOutput("arg edited: " + arg.getName());
+        } catch (Exception e) {
+            logger.logToError("edit arg error: " + e.getMessage());
+        }
+    }
+
     private void autoUpdateTypeComboBoxActionListenerInit() {
         if (Objects.requireNonNull(autoUpdateTypeComboBox.getSelectedItem()).toString()
-                   .equals(AutoUpdateType.Groovy_CODE.toString())) {
+                .equals(AutoUpdateType.Groovy_CODE.toString())) {
             argCodePathLabel.setEnabled(true);
             codePathPanel.setEnabled(true);
             argCodePathTextField.setEnabled(true);
@@ -232,9 +343,9 @@ public class ArgDialog extends JDialog {
 
             if (autoUpdateTypeComboBox.getSelectedItem().toString().equals(AutoUpdateType.UUID.toString()) ||
                     autoUpdateTypeComboBox.getSelectedItem().toString()
-                                          .equals(AutoUpdateType.TIMESTAMP.toString()) ||
+                            .equals(AutoUpdateType.TIMESTAMP.toString()) ||
                     autoUpdateTypeComboBox.getSelectedItem().toString()
-                                          .equals(AutoUpdateType.SHA1_OF_TIMESTAMP.toString())) {
+                            .equals(AutoUpdateType.SHA1_OF_TIMESTAMP.toString())) {
                 argLengthLabel.setEnabled(false);
                 argLengthTextField.setEnabled(false);
             } else {
@@ -407,7 +518,7 @@ public class ArgDialog extends JDialog {
                 arg.setLength(length);
             }
         }
-
+        arg.setEnabled(enabledCheckBox.isSelected());
         enviTab.getArgTableModel().addArg(arg);
         Environment.argsMap.put(name, arg);
 
