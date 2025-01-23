@@ -172,7 +172,8 @@ public class EnvironmentTab extends JPanel {
                 logger.logToError("This is the first row, can not move up.");
                 return;
             }
-            argTableModel.moveUp(row);
+            int modelRow = argTable.getRowSorter().convertRowIndexToModel(row);
+            argTableModel.moveUp(modelRow);
             argTable.setRowSelectionInterval(row - 1, row - 1);
         });
 
@@ -187,7 +188,8 @@ public class EnvironmentTab extends JPanel {
                 logger.logToError("This is the last row, can not move down.");
                 return;
             }
-            argTableModel.moveDown(row);
+            int modelRow = argTable.getRowSorter().convertRowIndexToModel(row);
+            argTableModel.moveDown(modelRow);
             argTable.setRowSelectionInterval(row + 1, row + 1);
         });
 
