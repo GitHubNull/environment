@@ -126,7 +126,6 @@ public class ArgDialog extends JDialog {
 
     private void disableAllFields() {
         enableAllFields(false);
-        enabledCheckBox.setSelected(false);
     }
 
 
