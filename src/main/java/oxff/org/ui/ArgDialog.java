@@ -8,16 +8,20 @@ import oxff.org.model.ArgDialogOpType;
 import oxff.org.model.ArgType;
 import oxff.org.model.AutoUpdateType;
 import oxff.org.utils.GroovyUtils;
+import oxff.org.utils.StringTool;
 import oxff.org.utils.Tools;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class ArgDialog extends JDialog {
+    private static final String DEFAULT_LENGTH = "8";
+    private static final String DEFAULT_INCREMENT_VALUE = "1";
     ArgDialogOpType argDialogOpType;
-
     JPanel northPanel;
     //    JScrollPane centPanel;
     JPanel southPanel;
@@ -38,11 +42,8 @@ public class ArgDialog extends JDialog {
     private JPanel codePathPanel;
     private JTextField argCodePathTextField;
     private JButton codePathButtonChooseFile;
-
     private JTextField argDescriptionTextField;
-
     private JCheckBox enabledCheckBox;
-
     private JButton okButton;
     private JButton cancelButton;
 
@@ -98,9 +99,12 @@ public class ArgDialog extends JDialog {
     private void initUIStatusByArgDialogOpType() {
         switch (argDialogOpType) {
             case ADD:
+                enableAllFields(true);
+                break;
             case EDIT:
                 enableAllFields(true);
-                enabledCheckBox.setSelected(true);
+                Arg arg = Environment.argTableModel.getArg(selectedRow);
+                enabledCheckBox.setSelected(arg.isEnabled());
                 break;
             case VIEW:
             case DELETE:
@@ -324,90 +328,95 @@ public class ArgDialog extends JDialog {
     }
 
     private void autoUpdateTypeComboBoxActionListenerInit() {
-        if (Objects.requireNonNull(autoUpdateTypeComboBox.getSelectedItem()).toString()
-                .equals(AutoUpdateType.Groovy_CODE.toString())) {
-            argCodePathLabel.setEnabled(true);
-            codePathPanel.setEnabled(true);
-            argCodePathTextField.setEnabled(true);
-            codePathButtonChooseFile.setEnabled(true);
-
-            argLengthLabel.setEnabled(false);
-            argLengthTextField.setEnabled(false);
-
-        } else {
-            argCodePathLabel.setEnabled(false);
-            codePathPanel.setEnabled(false);
-            argCodePathTextField.setEnabled(false);
-            codePathButtonChooseFile.setEnabled(false);
-
-            if (autoUpdateTypeComboBox.getSelectedItem().toString().equals(AutoUpdateType.UUID.toString()) ||
-                    autoUpdateTypeComboBox.getSelectedItem().toString()
-                            .equals(AutoUpdateType.TIMESTAMP.toString()) ||
-                    autoUpdateTypeComboBox.getSelectedItem().toString()
-                            .equals(AutoUpdateType.SHA1_OF_TIMESTAMP.toString())) {
-                argLengthLabel.setEnabled(false);
-                argLengthTextField.setEnabled(false);
-            } else {
-                argLengthLabel.setEnabled(true);
-                argLengthTextField.setEnabled(true);
-            }
+        Object selectedItem = autoUpdateTypeComboBox.getSelectedItem();
+        if (selectedItem == null) {
+            return;
         }
 
+        String selectedType = selectedItem.toString();
+        boolean isGroovyCode = AutoUpdateType.Groovy_CODE.toString().equals(selectedType);
+        boolean isUUIDorTimestampOrSHA1 = Arrays.asList(
+                AutoUpdateType.UUID.toString(),
+                AutoUpdateType.TIMESTAMP.toString(),
+                AutoUpdateType.SHA1_OF_TIMESTAMP.toString()
+        ).contains(selectedType);
+
+        updateComponentEnabledStatus(isGroovyCode, isUUIDorTimestampOrSHA1);
 
         SwingUtilities.invokeLater(() -> {
-            logger.logToOutput("Selected auto update type: " + autoUpdateTypeComboBox.getSelectedItem().toString());
+            logger.logToOutput("Selected auto update type: " + selectedType);
 
-            int length = 8;
-            try {
-                length = Integer.parseInt(argLengthTextField.getText().trim());
-            } catch (Exception e1) {
-                logger.logToError(e1);
-                argLengthTextField.setText("8");
-            }
+            int length = parseLengthFromTextField();
 
-            switch (AutoUpdateType.getAutoUpdateType(autoUpdateTypeComboBox.getSelectedItem().toString())) {
-                case UUID:
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomUUID());
-                    logger.logToOutput("UUID: " + Tools.getRandomUUID());
-                    break;
-                case TIMESTAMP:
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.getTimestamp());
-                    logger.logToOutput("Timestamp: " + Tools.getTimestamp());
-                    break;
-                case SHA1_OF_TIMESTAMP:
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.sha1(Tools.getTimestamp()));
-                    logger.logToOutput("SHA1: " + Tools.sha1(Tools.getTimestamp()));
-                    break;
-                case RANDOM_NUMBER:
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomNumber(length));
-                    logger.logToOutput("Random Number: " + Tools.getRandomNumber(length));
-                    break;
-                case RANDOM_TEXT:
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomText(length));
-                    logger.logToOutput("Random Text: " + Tools.getRandomText(length));
-                    break;
-                case INCREMENT_NUMBER:
-                    String tmpValue = argDefaultValueTextField.getText().strip().trim().isEmpty() ? "1" :
-                            argDefaultValueTextField.getText().strip().trim();
-                    if (argDefaultValueTextField.getText().strip().trim().isEmpty()) {
-                        argDefaultValueTextField.setText("1");
-                    }
-                    autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomIncrementNumber(tmpValue));
-                    logger.logToOutput("Increment Number: " + Tools.getRandomIncrementNumber(tmpValue));
-                    break;
-                case Groovy_CODE:
-                    autoUpdateTypeExampleLabel.setText("Groovy Code Example: ");
-                    logger.logToOutput("Groovy Code Example: ");
-                    break;
-                default:
-                    autoUpdateTypeExampleLabel.setText("default: ");
-                    logger.logToError("default");
+            AutoUpdateType autoUpdateType = AutoUpdateType.getAutoUpdateType(selectedType);
+            updateExampleLabelAndLog(autoUpdateType, length);
+
+            if (checkArgFields()) {
+                okButton.setEnabled(true);
             }
         });
+    }
 
+    private void updateComponentEnabledStatus(boolean isGroovyCode, boolean isUUIDorTimestampOrSHA1) {
+        argCodePathLabel.setEnabled(isGroovyCode);
+        codePathPanel.setEnabled(isGroovyCode);
+        argCodePathTextField.setEnabled(isGroovyCode);
+        codePathButtonChooseFile.setEnabled(isGroovyCode);
 
-        if (checkArgFields()) {
-            okButton.setEnabled(true);
+        argLengthLabel.setEnabled(!isGroovyCode && !isUUIDorTimestampOrSHA1);
+        argLengthTextField.setEnabled(!isGroovyCode && !isUUIDorTimestampOrSHA1);
+    }
+
+    private int parseLengthFromTextField() {
+        String argLengthText = argLengthTextField.getText().trim();
+        if (argLengthText.isEmpty() || argLengthText.isBlank()) {
+            argLengthTextField.setText(DEFAULT_LENGTH);
+            return Integer.parseInt(DEFAULT_LENGTH);
+        }
+        try {
+            return Integer.parseInt(argLengthText.trim());
+        } catch (NumberFormatException e) {
+            logger.logToError(e);
+            argLengthTextField.setText(DEFAULT_LENGTH);
+            return Integer.parseInt(DEFAULT_LENGTH);
+        }
+    }
+
+    private void updateExampleLabelAndLog(AutoUpdateType autoUpdateType, int length) {
+        switch (autoUpdateType) {
+            case UUID:
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomUUID());
+                logger.logToOutput("UUID: " + Tools.getRandomUUID());
+                break;
+            case TIMESTAMP:
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.getTimestamp());
+                logger.logToOutput("Timestamp: " + Tools.getTimestamp());
+                break;
+            case SHA1_OF_TIMESTAMP:
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.sha1(Tools.getTimestamp()));
+                logger.logToOutput("SHA1: " + Tools.sha1(Tools.getTimestamp()));
+                break;
+            case RANDOM_NUMBER:
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomNumber(length));
+                logger.logToOutput("Random Number: " + Tools.getRandomNumber(length));
+                break;
+            case RANDOM_TEXT:
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomText(length));
+                logger.logToOutput("Random Text: " + Tools.getRandomText(length));
+                break;
+            case INCREMENT_NUMBER:
+                String tmpValue = argDefaultValueTextField.getText().strip().trim().isEmpty() ? DEFAULT_INCREMENT_VALUE :
+                        argDefaultValueTextField.getText().strip().trim();
+                autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomIncrementNumber(tmpValue));
+                logger.logToOutput("Increment Number: " + Tools.getRandomIncrementNumber(tmpValue));
+                break;
+            case Groovy_CODE:
+                autoUpdateTypeExampleLabel.setText("Groovy Code Example: ");
+                logger.logToOutput("Groovy Code Example: ");
+                break;
+            default:
+                autoUpdateTypeExampleLabel.setText("default: ");
+                logger.logToError("default");
         }
     }
 
@@ -525,44 +534,94 @@ public class ArgDialog extends JDialog {
     }
 
     private boolean checkArgFields() {
+        if (!checkArgName() || !checkArgAutoUpdateType()) {
+            return false;
+        }
+        AutoUpdateType autoUpdateType = AutoUpdateType.getAutoUpdateType(
+                Objects.requireNonNull(autoUpdateTypeComboBox.getSelectedItem()).toString());
+        return switch (autoUpdateType) {
+            case UUID, TIMESTAMP, SHA1_OF_TIMESTAMP -> true;
+            case RANDOM_NUMBER, RANDOM_TEXT -> checkArgLength();
+            case INCREMENT_NUMBER -> checkArgDefaultValue();
+            case Groovy_CODE -> checkArgCodePath();
+            default -> false;
+        };
+    }
+
+    private boolean checkArgName() {
         String name = argNameTextField.getText();
         if (null == name || name.isEmpty() || name.isBlank()) {
             return false;
         }
-        ArgType argType = ArgType.getArgType(Objects.requireNonNull(argTypeComboBox.getSelectedItem()).toString());
-        if (null == argType) {
+
+        // 只允许出现大小写字母和下划线，并且必须以字母或者下划线开始
+        if (!name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
             return false;
         }
+        return true;
+    }
+
+    private boolean checkArgAutoUpdateType() {
         AutoUpdateType autoUpdateType = AutoUpdateType.getAutoUpdateType(
                 Objects.requireNonNull(autoUpdateTypeComboBox.getSelectedItem()).toString());
         if (AutoUpdateType.NONE == autoUpdateType) {
             return false;
         }
+        return true;
+    }
 
-        if (autoUpdateType.equals(AutoUpdateType.UUID) || autoUpdateType.equals(AutoUpdateType.TIMESTAMP) ||
-                autoUpdateType.equals(AutoUpdateType.SHA1_OF_TIMESTAMP)) {
-            return true;
-        } else {
-            String defaultValue = argDefaultValueTextField.getText();
-            if (null == defaultValue || defaultValue.isEmpty() || defaultValue.isBlank()) {
-                return false;
-            }
+    private boolean checkArgLength() {
+        String lengthStr = argLengthTextField.getText();
+        if (null == lengthStr || lengthStr.isEmpty() || lengthStr.isBlank()) {
+            return false;
+        }
+        int length;
+        try {
+            length = Integer.parseInt(lengthStr);
+        } catch (NumberFormatException e) {
+            logger.logToError(e);
+            return false;
+        }
+        return length > 0;
+    }
 
-            if (AutoUpdateType.Groovy_CODE == autoUpdateType) {
-                String codePath = argCodePathTextField.getText();
-                return (null != codePath && !codePath.isEmpty() && !codePath.isBlank());
-            }
+    private boolean checkArgDefaultValue() {
+        String defaultValue = argDefaultValueTextField.getText();
+        if (null == defaultValue || defaultValue.isEmpty() || defaultValue.isBlank()) {
+            return false;
+        }
+        return true;
+    }
 
-            int length;
-            try {
-                length = Integer.parseInt(argLengthTextField.getText());
-            } catch (NumberFormatException e) {
-                logger.logToError(e);
-                return false;
-            }
-            return length >= 0;
+    private boolean checkArgValue() {
+        String value = argValueTextField.getText();
+        if (null == value || value.isEmpty() || value.isBlank()) {
+            return false;
+        }
+        if (AutoUpdateType.INCREMENT_NUMBER.equals(autoUpdateTypeComboBox.getSelectedItem())) {
+            return StringTool.isPositiveInteger(value);
         }
 
+        return true;
+    }
+
+    private boolean checkArgCodePath() {
+        String codePath = argCodePathTextField.getText();
+        if (null == codePath || codePath.isEmpty() || codePath.isBlank()) {
+            return false;
+        }
+        if (!new File(codePath).exists()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkArgDescription() {
+        String description = argDescriptionTextField.getText();
+        if (null == description || description.isEmpty() || description.isBlank()) {
+            return false;
+        }
+        return true;
     }
 
 }
