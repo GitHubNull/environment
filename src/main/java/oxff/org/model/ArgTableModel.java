@@ -159,9 +159,31 @@ public class ArgTableModel extends AbstractTableModel {
         return argList.indexOf(arg);
     }
 
-    public void updateArg(int row, Arg arg) {
+    public Arg getArgByName(String argName) {
+        if (null == argList || argList.isEmpty() || null == argName || argName.isEmpty() || argName.isBlank()){
+            return null;
+        }
+        for (Arg arg : argList) {
+            if (arg.getName().equals(argName.strip())) {
+                return arg;
+            }
+        }
+        return null;
+    }
+
+    public void updateArgByRow(int row, Arg arg) {
         argList.set(row, arg);
         fireTableRowsUpdated(row, row);
+    }
+
+    public void updateArgById(int id, Arg arg) {
+        for (int i = 0; i < argList.size(); i++) {
+            if (argList.get(i).getId() == id) {
+                argList.set(i, arg);
+                fireTableRowsUpdated(i, i);
+                return;
+            }
+        }
     }
 
     // 添加行移动逻辑

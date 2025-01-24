@@ -2,6 +2,7 @@ package oxff.org.utils.requestProcessor.bodyProcessor;
 
 import oxff.org.Environment;
 import oxff.org.model.Arg;
+import oxff.org.model.AutoUpdateType;
 import oxff.org.model.VariableInfo;
 import oxff.org.utils.ArgTool;
 import oxff.org.utils.Tools;
@@ -23,7 +24,7 @@ public class TextBodyProcessor {
             String newValue;
             String name = variableInfo.name;
             String value = jsonString.substring(variableInfo.startIndex, variableInfo.endIndex);
-            Arg arg = Environment.argsMap.get(name);
+            Arg arg = Environment.argTableModel.getArgByName(name);
             if (arg == null || !arg.isEnabled()) {
                 Environment.logger.logToError("Error processing placeholder: " + name);
                 String replaceStr = "\\{\\{%s\\}\\}".formatted(name);
@@ -41,6 +42,13 @@ public class TextBodyProcessor {
                 Environment.logger.logToError("Error processing placeholder: " + e.getMessage());
                 newValue = value;
             }
+
+            if (AutoUpdateType.INCREMENT_NUMBER.equals(arg.getAutoUpdateType()) && !value.equals(newValue)){
+                arg.setValue(newValue);
+//                Environment.argsMap.put(name, arg);
+                Environment.argTableModel.updateArgById(arg.getId(), arg);
+            }
+
             String replaceStr = "\\{\\{%s\\}\\}".formatted(name);
             jsonString = jsonString.replaceAll(replaceStr, newValue);
 

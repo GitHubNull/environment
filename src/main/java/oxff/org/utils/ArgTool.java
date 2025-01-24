@@ -35,4 +35,9 @@ public class ArgTool {
             }
         }
     }
+
+//    private String processIncrementNumber(String value) {
+//        String newValue = Tools.getRandomIncrementNumber(value);
+//        return newValue;
+//    }
 }

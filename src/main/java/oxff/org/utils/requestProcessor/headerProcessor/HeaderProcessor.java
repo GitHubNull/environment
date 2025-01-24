@@ -35,7 +35,7 @@ public class HeaderProcessor {
             }
 
             String headerValueWithoutMarker = Tools.stripMarker(headerValue);
-            Arg arg = Environment.argsMap.get(headerValueWithoutMarker);
+            Arg arg = Environment.argTableModel.getArgByName(headerValueWithoutMarker);
             if (null == arg || !arg.isEnabled()) {
                 result.add(header);
                 continue;

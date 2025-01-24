@@ -42,7 +42,7 @@ public class FormBodyProcessor {
                     continue;
                 }
                 String valueWithoutMark = Tools.stripMarker(value);
-                Arg arg = Environment.argsMap.get(valueWithoutMark);
+                Arg arg = Environment.argTableModel.getArgByName(valueWithoutMark);
                 if (null == arg || !arg.isEnabled()) {
                     result.put(key, URLEncoder.encode(value, StandardCharsets.UTF_8));
                     continue;

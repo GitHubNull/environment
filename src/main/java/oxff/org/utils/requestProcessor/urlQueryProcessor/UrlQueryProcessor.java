@@ -1,5 +1,6 @@
 package oxff.org.utils.requestProcessor.urlQueryProcessor;
 
+import burp.api.montoya.logging.Logging;
 import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
@@ -11,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import burp.api.montoya.logging.Logging;
 
 import static oxff.org.Environment.GROOVY_FUNCTION_NAME;
 
@@ -34,7 +34,7 @@ public class UrlQueryProcessor {
                 continue;
             }
             String queryItemNameWithoutMarker = Tools.stripMarker(queryItemName);
-            Arg arg = Environment.argsMap.get(queryItemNameWithoutMarker);
+            Arg arg = Environment.argTableModel.getArgByName(queryItemNameWithoutMarker);
             if (null == arg || !arg.isEnabled()) {
                 logger.logToOutput("queryItemValue is not marker, skip");
                 queryMap.put(queryItemName, queryItemValue);

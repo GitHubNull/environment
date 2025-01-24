@@ -39,7 +39,7 @@ public class UrlPathProcessor {
                 continue;
             }
             String pathSegmentWithoutMark = Tools.stripMarker(pathSegment);
-            Arg arg = Environment.argsMap.get(pathSegmentWithoutMark);
+            Arg arg = Environment.argTableModel.getArgByName(pathSegmentWithoutMark);
             if (null == arg || !arg.isEnabled()) {
                 result.add(pathSegment);
                 continue;

@@ -34,7 +34,7 @@ public class Environment implements BurpExtension {
     public static List<Arg> args;
 
     public static ArgTableModel argTableModel;
-    public static Map<String, Arg> argsMap;
+//    public static Map<String, Arg> argsMap;
     public static Map<AutoUpdateType, Method> autoUpdateMethods;
     public static Map<String, Script> groovyScripts;
     @Override
@@ -46,7 +46,7 @@ public class Environment implements BurpExtension {
         args = new ArrayList<>();
 
         argTableModel = new ArgTableModel(args);
-        argsMap = new HashMap<>();
+//        argsMap = new HashMap<>();
         groovyScripts = new HashMap<>();
 
         autoUpdateMethods = new HashMap<>();

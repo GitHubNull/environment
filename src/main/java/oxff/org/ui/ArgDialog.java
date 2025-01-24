@@ -316,8 +316,7 @@ public class ArgDialog extends JDialog {
             arg.setCodePath(argCodePathTextField.getText());
             arg.setDescription(argDescriptionTextField.getText());
             arg.setEnabled(enabledCheckBox.isSelected());
-            Environment.argTableModel.updateArg(selectedRow, arg);
-            Environment.argsMap.put(arg.getName(), arg);
+            Environment.argTableModel.updateArgByRow(selectedRow, arg);
             logger.logToOutput("arg edited: " + arg.getName());
         } catch (Exception e) {
             logger.logToError("edit arg error: " + e.getMessage());
@@ -520,7 +519,7 @@ public class ArgDialog extends JDialog {
         }
         arg.setEnabled(enabledCheckBox.isSelected());
         enviTab.getArgTableModel().addArg(arg);
-        Environment.argsMap.put(name, arg);
+//        Environment.argsMap.put(name, arg);
 
         dispose();
     }

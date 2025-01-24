@@ -110,7 +110,7 @@ public class MultipartBodyProcessor {
                     String name = variableInfo.name;
                     String value = content.substring(variableInfo.startIndex, variableInfo.endIndex);
 
-                    Arg arg = Environment.argsMap.get(name);
+                    Arg arg = argTableModel.getArgByName(name);
                     if (null == arg || !arg.isEnabled()) {
                         continue;
                     }
