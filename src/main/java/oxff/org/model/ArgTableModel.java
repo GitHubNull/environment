@@ -137,6 +137,11 @@ public class ArgTableModel extends AbstractTableModel {
         return argList;
     }
 
+    public void setArgList(List<Arg> filteredArgs) {
+        argList.clear();
+        argList.addAll(filteredArgs);
+    }
+
     public Arg getArg(int row) {
         return argList.get(row);
     }
@@ -159,26 +164,14 @@ public class ArgTableModel extends AbstractTableModel {
         fireTableRowsUpdated(row, row);
     }
 
-    public void moveUp(int row){
-        if(row > 0){
-            Arg arg = argList.get(row);
-            argList.remove(row);
-            argList.add(row - 1, arg);
-            fireTableRowsUpdated(row - 1, row);
+    // 添加行移动逻辑
+    public void moveRow(int oldIndex, int newIndex) {
+        if (oldIndex < 0 || oldIndex >= argList.size() || newIndex < 0 || newIndex >= argList.size()) {
+            throw new IllegalArgumentException("Invalid row index");
         }
-    }
 
-    public void moveDown(int row){
-        if(row < argList.size() - 1){
-            Arg arg = argList.get(row);
-            argList.remove(row);
-            argList.add(row + 1, arg);
-            fireTableRowsUpdated(row, row + 1);
-        }
-    }
-
-    public void setArgList(List<Arg> filteredArgs) {
-        argList.clear();
-        argList.addAll(filteredArgs);
+        Arg arg = argList.remove(oldIndex); // 移除旧位置的行
+        argList.add(newIndex, arg); // 插入到新位置
+        fireTableRowsUpdated(Math.min(oldIndex, newIndex), Math.max(oldIndex, newIndex)); // 通知表格更新
     }
 }

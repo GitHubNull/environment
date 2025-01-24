@@ -11,10 +11,9 @@ import oxff.org.utils.requestProcessor.urlQueryProcessor.UrlQueryProcessor;
 
 import java.util.List;
 
-import static oxff.org.Environment.GROOVY_FUNCTION_NAME;
 
 public class RequestProcessor {
-    private Logging logger;
+    private final Logging logger;
     UrlPathProcessor urlPathProcessor;
     UrlQueryProcessor urlQueryProcessor;
     HeaderProcessor headerProcessor;

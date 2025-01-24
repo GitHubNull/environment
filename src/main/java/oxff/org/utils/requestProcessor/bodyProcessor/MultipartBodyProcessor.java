@@ -3,7 +3,6 @@ package oxff.org.utils.requestProcessor.bodyProcessor;
 import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
-import oxff.org.model.ArgType;
 import oxff.org.model.AutoUpdateType;
 import oxff.org.model.VariableInfo;
 import oxff.org.utils.Tools;
@@ -11,9 +10,7 @@ import oxff.org.utils.Tools;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static oxff.org.Environment.*;
 

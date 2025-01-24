@@ -161,37 +161,9 @@ public class EnvironmentTab extends JPanel {
         });
 
 
-        moveUpButton.addActionListener(e -> {
-            int[] selectedRows = argTable.getSelectedRows();
-            if (selectedRows.length != 1) {
-                logger.logToError("Please select one row to move up.");
-                return;
-            }
-            int row = selectedRows[0];
-            if (row == 0) {
-                logger.logToError("This is the first row, can not move up.");
-                return;
-            }
-            int modelRow = argTable.getRowSorter().convertRowIndexToModel(row);
-            argTableModel.moveUp(modelRow);
-            argTable.setRowSelectionInterval(row - 1, row - 1);
-        });
+        moveUpButton.addActionListener(e -> moveSelectedRow(-1));
 
-        moveDownButton.addActionListener(e -> {
-            int[] selectedRows = argTable.getSelectedRows();
-            if (selectedRows.length != 1) {
-                logger.logToError("Please select one row to move down.");
-                return;
-            }
-            int row = selectedRows[0];
-            if (row == argTableModel.getRowCount() - 1) {
-                logger.logToError("This is the last row, can not move down.");
-                return;
-            }
-            int modelRow = argTable.getRowSorter().convertRowIndexToModel(row);
-            argTableModel.moveDown(modelRow);
-            argTable.setRowSelectionInterval(row + 1, row + 1);
-        });
+        moveDownButton.addActionListener(e -> moveSelectedRow(1));
 
         argTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -212,5 +184,29 @@ public class EnvironmentTab extends JPanel {
 
     public ArgTableModel getArgTableModel() {
         return argTableModel;
+    }
+
+    private void moveSelectedRow(int direction) {
+        int selectedRow = argTable.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a row to move.", "No Row Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int modelRow = argTable.convertRowIndexToModel(selectedRow);
+        int targetRow = modelRow + direction;
+
+        if (targetRow < 0 || targetRow >= argTableModel.getRowCount()) {
+            JOptionPane.showMessageDialog(this, "Cannot move row further in this direction.", "Boundary Reached", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 调用自定义TableModel的moveRow方法
+        argTableModel.moveRow(modelRow, targetRow);
+
+        // 更新选中行
+        int viewRow = argTable.convertRowIndexToView(targetRow);
+        argTable.setRowSelectionInterval(viewRow, viewRow);
+        argTable.scrollRectToVisible(argTable.getCellRect(viewRow, 0, true));
     }
 }

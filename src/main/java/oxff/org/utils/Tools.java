@@ -71,6 +71,9 @@ public class Tools {
     }
 
     public static boolean isMarker(String input) {
+        if (null == input || input.isBlank()){
+            return false;
+        }
         return input.contains(GlobalConst.LEFT_MARKER) && input.contains(GlobalConst.RIGHT_MARKER);
     }
 
@@ -124,7 +127,7 @@ public class Tools {
 
     public static String getRandomText(int length)
     {
-        String chars = "abcdefghijklmnopqrstuvwxyz";
+        @SuppressWarnings("SpellCheckingInspection") String chars = "abcdefghijklmnopqrstuvwxyz";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++)
         {
