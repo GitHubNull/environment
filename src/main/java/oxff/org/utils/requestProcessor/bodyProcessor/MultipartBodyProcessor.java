@@ -5,14 +5,15 @@ import oxff.org.Environment;
 import oxff.org.model.Arg;
 import oxff.org.model.AutoUpdateType;
 import oxff.org.model.VariableInfo;
-import oxff.org.utils.Tools;
+import oxff.org.utils.ArgTool;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static oxff.org.Environment.*;
+import static oxff.org.Environment.GROOVY_FUNCTION_NAME;
+import static oxff.org.Environment.argTableModel;
 
 public class MultipartBodyProcessor {
     /**
@@ -29,38 +30,6 @@ public class MultipartBodyProcessor {
             return i;
         }
         return -1;
-    }
-
-    /**
-     * 用于高效构建字节数组的工具类。
-     */
-    private static class ByteArrayBuilder {
-        private byte[] buffer = new byte[1024];
-        private int size = 0;
-
-        public void append(byte[] data) {
-            append(data, 0, data.length);
-        }
-
-        public void append(byte[] data, int offset, int length) {
-            ensureCapacity(size + length);
-            System.arraycopy(data, offset, buffer, size, length);
-            size += length;
-        }
-
-        public byte[] toByteArray() {
-            byte[] result = new byte[size];
-            System.arraycopy(buffer, 0, result, 0, size);
-            return result;
-        }
-
-        private void ensureCapacity(int capacity) {
-            if (capacity > buffer.length) {
-                byte[] newBuffer = new byte[Math.max(buffer.length * 2, capacity)];
-                System.arraycopy(buffer, 0, newBuffer, 0, size);
-                buffer = newBuffer;
-            }
-        }
     }
 
     /**
@@ -105,7 +74,7 @@ public class MultipartBodyProcessor {
                 }
 
                 String content = new String(requestBodyBytes, start, contentEndIndex - start, StandardCharsets.UTF_8);
-                VariableInfo variableInfo = Tools.extractBodyOneVariableInfo(content);
+                VariableInfo variableInfo = ArgTool.extractBodyOneVariableInfo(content);
                 while (null != variableInfo) {
                     String name = variableInfo.name;
                     String value = content.substring(variableInfo.startIndex, variableInfo.endIndex);
@@ -136,7 +105,7 @@ public class MultipartBodyProcessor {
                             Environment.logger.logToError("method is null");
                             continue;
                         }
-                        if (Tools.needParams(autoUpdateType)) {
+                        if (ArgTool.needParams(autoUpdateType)) {
                             try {
                                 newValue = (String) method.invoke(arg.getLength());
                             } catch (Exception e) {
@@ -154,7 +123,7 @@ public class MultipartBodyProcessor {
                     }
                     String replaceStr = "\\{\\{" + name + "\\}\\}";
                     content = content.replaceAll(replaceStr, newValue);
-                    variableInfo = Tools.extractBodyOneVariableInfo(content);
+                    variableInfo = ArgTool.extractBodyOneVariableInfo(content);
                 }
 
                 result.append(partHeaders.getBytes(StandardCharsets.UTF_8));
@@ -179,5 +148,37 @@ public class MultipartBodyProcessor {
         }
 
         return result.toByteArray();
+    }
+
+    /**
+     * 用于高效构建字节数组的工具类。
+     */
+    private static class ByteArrayBuilder {
+        private byte[] buffer = new byte[1024];
+        private int size = 0;
+
+        public void append(byte[] data) {
+            append(data, 0, data.length);
+        }
+
+        public void append(byte[] data, int offset, int length) {
+            ensureCapacity(size + length);
+            System.arraycopy(data, offset, buffer, size, length);
+            size += length;
+        }
+
+        public byte[] toByteArray() {
+            byte[] result = new byte[size];
+            System.arraycopy(buffer, 0, result, 0, size);
+            return result;
+        }
+
+        private void ensureCapacity(int capacity) {
+            if (capacity > buffer.length) {
+                byte[] newBuffer = new byte[Math.max(buffer.length * 2, capacity)];
+                System.arraycopy(buffer, 0, newBuffer, 0, size);
+                buffer = newBuffer;
+            }
+        }
     }
 }

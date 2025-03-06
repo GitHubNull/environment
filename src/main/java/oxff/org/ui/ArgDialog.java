@@ -7,20 +7,29 @@ import oxff.org.model.Arg;
 import oxff.org.model.ArgDialogOpType;
 import oxff.org.model.ArgType;
 import oxff.org.model.AutoUpdateType;
+import oxff.org.utils.ArgTool;
 import oxff.org.utils.GroovyUtils;
 import oxff.org.utils.StringTool;
 import oxff.org.utils.Tools;
+import oxff.org.utils.sec.sha.StringShaTools;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class ArgDialog extends JDialog {
     private static final String DEFAULT_LENGTH = "8";
     private static final String DEFAULT_INCREMENT_VALUE = "1";
+    private final static Set<String> NUMBER_TYPE_SET = new HashSet<>();
+    private final static Set<String> TEXT_TYPE_SET = new HashSet<>();
+    //    private final static Set<String> GROOVY_CODE_TYPE_SET = new HashSet<>();
+    private final static Set<String> ALL_TYPE_SET = new HashSet<>();
     ArgDialogOpType argDialogOpType;
     JPanel northPanel;
     //    JScrollPane centPanel;
@@ -47,11 +56,14 @@ public class ArgDialog extends JDialog {
     private JButton okButton;
     private JButton cancelButton;
 
+
     public ArgDialog(ArgDialogOpType argDialogOpType, Logging logger, int maxArgId, EnvironmentTab enviTab) {
         this.argDialogOpType = argDialogOpType;
         this.logger = logger;
         this.maxArgId = maxArgId;
         this.enviTab = enviTab;
+
+        initArgTypeSet();
 
         initUI();
         initData();
@@ -65,10 +77,46 @@ public class ArgDialog extends JDialog {
         this.argListSize = argListSize;
         this.selectedRow = selectedRow;
 
+        initArgTypeSet();
+
         initUI();
         initData();
         initUIStatusByArgDialogOpType();
         initActionListeners();
+    }
+
+    private void initNumberTypeSet() {
+        NUMBER_TYPE_SET.clear();
+        NUMBER_TYPE_SET.add(AutoUpdateType.TIMESTAMP.toString());
+        NUMBER_TYPE_SET.add(AutoUpdateType.RANDOM_NUMBER.toString());
+        NUMBER_TYPE_SET.add(AutoUpdateType.INCREMENT_NUMBER.toString());
+        NUMBER_TYPE_SET.add(AutoUpdateType.Groovy_CODE.toString());
+    }
+
+    private void initTextTypeSet() {
+        TEXT_TYPE_SET.clear();
+        TEXT_TYPE_SET.add(AutoUpdateType.UUID.toString());
+        TEXT_TYPE_SET.add(AutoUpdateType.SHA1_OF_TIMESTAMP.toString());
+        TEXT_TYPE_SET.add(AutoUpdateType.RANDOM_TEXT.toString());
+        TEXT_TYPE_SET.add(AutoUpdateType.Groovy_CODE.toString());
+    }
+
+    private void initAllArgTypeSet() {
+        ALL_TYPE_SET.clear();
+        ALL_TYPE_SET.add(AutoUpdateType.NONE.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.UUID.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.TIMESTAMP.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.SHA1_OF_TIMESTAMP.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.RANDOM_NUMBER.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.RANDOM_TEXT.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.INCREMENT_NUMBER.toString());
+        ALL_TYPE_SET.add(AutoUpdateType.Groovy_CODE.toString());
+    }
+
+    private void initArgTypeSet() {
+        initNumberTypeSet();
+        initTextTypeSet();
+        initAllArgTypeSet();
     }
 
     private void initData() {
@@ -151,12 +199,14 @@ public class ArgDialog extends JDialog {
         JLabel argTypeLabel = new JLabel("arg type: ");
         argTypeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         argTypeComboBox = new JComboBox<>();
-        argTypeComboBox.addItem("NUMBER");
-        argTypeComboBox.addItem("TEXT");
+        argTypeComboBox.addItem(ArgType.TEXT.toString());
+        argTypeComboBox.addItem(ArgType.NUMBER.toString());
+        argTypeComboBox.addItem(ArgType.ALL.toString());
+        argTypeComboBox.setSelectedItem(ArgType.ALL.toString());
+
         northPanel.add(argTypeLabel);
         northPanel.add(argTypeComboBox);
         northPanel.add(new JLabel());
-
 
         JLabel autoUpdateTypeLabel = new JLabel("auto update type: ");
         autoUpdateTypeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -272,12 +322,61 @@ public class ArgDialog extends JDialog {
             if (checkArgFields()) {
                 okButton.setEnabled(true);
             }
+            Object selectedItem = argTypeComboBox.getSelectedItem();
+            if (selectedItem == null) {
+                logger.logToError("Selected item is null.");
+                updateAutoUpdateTypeComboBoxItems(ArgType.ALL);
+                return;
+            }
+            String selectedItemString = selectedItem.toString();
+            if (null == selectedItemString || selectedItemString.isEmpty()){
+                logger.logToError("Selected item is empty.");
+                updateAutoUpdateTypeComboBoxItems(ArgType.ALL);
+                return;
+            }
+            ArgType argType = ArgType.getArgType(selectedItemString);
+            if (null == argType){
+                logger.logToError("Selected item is not a valid ArgType.");
+                updateAutoUpdateTypeComboBoxItems(ArgType.ALL);
+                return;
+            }
+            SwingUtilities.invokeLater(() -> {
+                updateAutoUpdateTypeComboBoxItems(argType);
+            });
         });
 
         autoUpdateTypeComboBox.addActionListener(e -> autoUpdateTypeComboBoxActionListenerInit());
 
         argCodePathTextField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
+                if (checkArgFields()) {
+                    okButton.setEnabled(true);
+                }
+            }
+        });
+
+        codePathButtonChooseFile.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+            fileChooser.setDialogTitle("Choose a file");
+
+            // groovy file only
+            fileChooser.setFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.isFile() && f.getName().endsWith(".groovy");
+                }
+
+                @Override
+                public String getDescription() {
+                    return "";
+                }
+            });
+
+            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                argCodePathTextField.setText(filePath);
                 if (checkArgFields()) {
                     okButton.setEnabled(true);
                 }
@@ -298,6 +397,33 @@ public class ArgDialog extends JDialog {
         });
 
         cancelButton.addActionListener(e -> dispose());
+    }
+
+    private void updateAutoUpdateTypeComboBoxItems(ArgType argType) {
+        switch (argType) {
+            case NUMBER:
+                setAutoUpdateTypeItems(NUMBER_TYPE_SET);
+                break;
+            case TEXT:
+                setAutoUpdateTypeItems(TEXT_TYPE_SET);
+                break;
+            default:
+                setAutoUpdateTypeItems(ALL_TYPE_SET);
+                break;
+        }
+    }
+
+    private void setAutoUpdateTypeItems(Set<String> autoUpdateTypeItems) {
+        autoUpdateTypeComboBox.removeAllItems();
+        if (autoUpdateTypeItems == null || autoUpdateTypeItems.isEmpty()) {
+            for (String item : ALL_TYPE_SET) {
+                autoUpdateTypeComboBox.addItem(item);
+            }
+            return;
+        }
+        for (String item : autoUpdateTypeItems) {
+            autoUpdateTypeComboBox.addItem(item);
+        }
     }
 
     private void deleteArgProcess() {
@@ -393,8 +519,8 @@ public class ArgDialog extends JDialog {
                 logger.logToOutput("Timestamp: " + Tools.getTimestamp());
                 break;
             case SHA1_OF_TIMESTAMP:
-                autoUpdateTypeExampleLabel.setText("Example: " + Tools.sha1(Tools.getTimestamp()));
-                logger.logToOutput("SHA1: " + Tools.sha1(Tools.getTimestamp()));
+                autoUpdateTypeExampleLabel.setText("Example: " + StringShaTools.sha1(Tools.getTimestamp()));
+                logger.logToOutput("SHA1: " + StringShaTools.sha1(Tools.getTimestamp()));
                 break;
             case RANDOM_NUMBER:
                 autoUpdateTypeExampleLabel.setText("Example: " + Tools.getRandomNumber(length));
@@ -468,7 +594,7 @@ public class ArgDialog extends JDialog {
             Script script;
             try {
                 script = GroovyUtils.getScript(codePath);
-                arg.setScript(script);
+//                arg.setScript(script);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "code path is invalid");
                 return;
@@ -505,7 +631,7 @@ public class ArgDialog extends JDialog {
             }
             arg.setMethod(method);
 
-            if (Tools.needParams(autoUpdateType)) {
+            if (ArgTool.needParams(autoUpdateType)) {
                 String lengthStr = argLengthTextField.getText();
                 if (null == lengthStr || lengthStr.isEmpty() || lengthStr.isBlank()) {
                     JOptionPane.showMessageDialog(null, "arg length is empty");

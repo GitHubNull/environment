@@ -5,7 +5,6 @@ import oxff.org.model.Arg;
 import oxff.org.model.AutoUpdateType;
 import oxff.org.model.VariableInfo;
 import oxff.org.utils.ArgTool;
-import oxff.org.utils.Tools;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class TextBodyProcessor {
         }
 
         String jsonString = new String(requestBody, StandardCharsets.UTF_8);
-        VariableInfo variableInfo = Tools.extractBodyOneVariableInfo(jsonString);
+        VariableInfo variableInfo = ArgTool.extractBodyOneVariableInfo(jsonString);
         HashMap<String, String> nullOrDisabledArgs = new HashMap<>();
         int nullOrDisabledArgsCount = 0;
         while (variableInfo != null) {
@@ -32,7 +31,7 @@ public class TextBodyProcessor {
                 nullOrDisabledArgsCount++;
                 nullOrDisabledArgs.put(newValue, "{{%s}}".formatted(name));
                 jsonString = jsonString.replaceAll(replaceStr, newValue);
-                variableInfo = Tools.extractBodyOneVariableInfo(jsonString);
+                variableInfo = ArgTool.extractBodyOneVariableInfo(jsonString);
                 continue;
             }
             try {
@@ -43,7 +42,7 @@ public class TextBodyProcessor {
                 newValue = value;
             }
 
-            if (AutoUpdateType.INCREMENT_NUMBER.equals(arg.getAutoUpdateType()) && !value.equals(newValue)){
+            if (AutoUpdateType.INCREMENT_NUMBER.equals(arg.getAutoUpdateType()) && !value.equals(newValue)) {
                 arg.setValue(newValue);
 //                Environment.argsMap.put(name, arg);
                 Environment.argTableModel.updateArgById(arg.getId(), arg);
@@ -53,7 +52,7 @@ public class TextBodyProcessor {
             jsonString = jsonString.replaceAll(replaceStr, newValue);
 
             // Update variableInfo for the next iteration
-            variableInfo = Tools.extractBodyOneVariableInfo(jsonString);
+            variableInfo = ArgTool.extractBodyOneVariableInfo(jsonString);
         }
 
         nullOrDisabledArgsCount = 0;

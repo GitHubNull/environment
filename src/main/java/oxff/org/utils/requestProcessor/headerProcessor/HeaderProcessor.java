@@ -6,7 +6,7 @@ import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
 import oxff.org.model.AutoUpdateType;
-import oxff.org.utils.Tools;
+import oxff.org.utils.ArgTool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,12 +29,12 @@ public class HeaderProcessor {
         for (HttpHeader header : headers) {
             String headerName = header.name();
             String headerValue = header.value();
-            if (!Tools.isMarker(headerValue)) {
+            if (!ArgTool.isMarker(headerValue)) {
                 result.add(header);
                 continue;
             }
 
-            String headerValueWithoutMarker = Tools.stripMarker(headerValue);
+            String headerValueWithoutMarker = ArgTool.stripMarker(headerValue);
             Arg arg = Environment.argTableModel.getArgByName(headerValueWithoutMarker);
             if (null == arg || !arg.isEnabled()) {
                 result.add(header);
@@ -61,7 +61,7 @@ public class HeaderProcessor {
                 Method method = arg.getMethod();
                 AutoUpdateType autoUpdateType = arg.getAutoUpdateType();
                 try {
-                    if (Tools.needParams(autoUpdateType)) {
+                    if (ArgTool.needParams(autoUpdateType)) {
                         newValue = (String) method.invoke(null, arg.getValue());
                     } else {
                         newValue = (String) method.invoke(null);

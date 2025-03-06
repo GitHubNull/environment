@@ -5,7 +5,7 @@ import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
 import oxff.org.model.AutoUpdateType;
-import oxff.org.utils.Tools;
+import oxff.org.utils.ArgTool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,11 +29,11 @@ public class UrlQueryProcessor {
             String[] queryItemArray = queryItem.split("=");
             String queryItemName = queryItemArray[0];
             String queryItemValue = queryItemArray[1];
-            if (!Tools.isMarker(queryItemValue)) {
+            if (!ArgTool.isMarker(queryItemValue)) {
                 queryMap.put(queryItemName, queryItemValue);
                 continue;
             }
-            String queryItemNameWithoutMarker = Tools.stripMarker(queryItemName);
+            String queryItemNameWithoutMarker = ArgTool.stripMarker(queryItemName);
             Arg arg = Environment.argTableModel.getArgByName(queryItemNameWithoutMarker);
             if (null == arg || !arg.isEnabled()) {
                 logger.logToOutput("queryItemValue is not marker, skip");
@@ -45,7 +45,7 @@ public class UrlQueryProcessor {
             AutoUpdateType autoUpdateType = arg.getAutoUpdateType();
             if (autoUpdateType.equals(AutoUpdateType.Groovy_CODE)) {
                 Script script = arg.getScript();
-                if (null == script){
+                if (null == script) {
                     continue;
                 }
                 Map<String, String> params = new HashMap<>();
@@ -59,7 +59,7 @@ public class UrlQueryProcessor {
 
             } else {
                 Method method = Environment.autoUpdateMethods.get(autoUpdateType);
-                if (Tools.needParams(autoUpdateType)) {
+                if (ArgTool.needParams(autoUpdateType)) {
                     try {
                         newValue = (String) method.invoke(arg.getLength());
                     } catch (InvocationTargetException | IllegalAccessException e) {

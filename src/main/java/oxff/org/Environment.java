@@ -29,7 +29,7 @@ public class Environment implements BurpExtension {
 
     public final static String LEFT_MARKER = "{{";
     public final static String RIGHT_MARKER = "}}";
-    public final static String  GROOVY_FUNCTION_NAME = "modify:";
+    public final static String  GROOVY_FUNCTION_NAME = "modify";
 
     public static List<Arg> args;
 

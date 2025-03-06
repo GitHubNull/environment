@@ -1,5 +1,6 @@
 import oxff.org.model.AutoUpdateType;
 import oxff.org.utils.Tools;
+import oxff.org.utils.sec.sha.StringShaTools;
 
 public class TestAutoUpdateType {
     public static void main(String[] args)
@@ -13,7 +14,7 @@ public class TestAutoUpdateType {
                 System.out.println(Tools.getTimestamp());
                 break;
             case SHA1_OF_TIMESTAMP:
-                System.out.println(Tools.sha1(Tools.getTimestamp()));
+                System.out.println(StringShaTools.sha1(Tools.getTimestamp()));
                 break;
             case RANDOM_NUMBER:
                 System.out.println(Tools.getRandomNumber(5));

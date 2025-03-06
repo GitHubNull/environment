@@ -4,7 +4,7 @@ import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
 import oxff.org.model.AutoUpdateType;
-import oxff.org.utils.Tools;
+import oxff.org.utils.ArgTool;
 
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
@@ -37,11 +37,11 @@ public class FormBodyProcessor {
                 }
                 String key = URLDecoder.decode(keyValue[0].strip().trim(), StandardCharsets.UTF_8);
                 String value = URLDecoder.decode(keyValue[1].strip().trim(), StandardCharsets.UTF_8);
-                if (!Tools.isMarker(value)) {
+                if (!ArgTool.isMarker(value)) {
                     result.put(key, URLEncoder.encode(value, StandardCharsets.UTF_8));
                     continue;
                 }
-                String valueWithoutMark = Tools.stripMarker(value);
+                String valueWithoutMark = ArgTool.stripMarker(value);
                 Arg arg = Environment.argTableModel.getArgByName(valueWithoutMark);
                 if (null == arg || !arg.isEnabled()) {
                     result.put(key, URLEncoder.encode(value, StandardCharsets.UTF_8));
@@ -72,7 +72,7 @@ public class FormBodyProcessor {
                         result.put(key, URLEncoder.encode(value, StandardCharsets.UTF_8));
                         continue;
                     }
-                    if (Tools.needParams(autoUpdateType)) {
+                    if (ArgTool.needParams(autoUpdateType)) {
                         try {
                             newValue = (String) method.invoke(arg.getLength());
                         } catch (Exception e) {

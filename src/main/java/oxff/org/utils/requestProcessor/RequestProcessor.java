@@ -3,7 +3,7 @@ package oxff.org.utils.requestProcessor;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.logging.Logging;
-import oxff.org.utils.Tools;
+import oxff.org.utils.ArgTool;
 import oxff.org.utils.requestProcessor.bodyProcessor.RequestBodyProcessor;
 import oxff.org.utils.requestProcessor.headerProcessor.HeaderProcessor;
 import oxff.org.utils.requestProcessor.urlPathProcessor.UrlPathProcessor;
@@ -26,7 +26,7 @@ public class RequestProcessor {
     }
 
     public String processPath(String pathWithoutQuery) {
-        if (null == pathWithoutQuery || (!Tools.isMarker(pathWithoutQuery) || pathWithoutQuery.strip().trim().isEmpty())) {
+        if (null == pathWithoutQuery || (!ArgTool.isMarker(pathWithoutQuery) || pathWithoutQuery.strip().trim().isEmpty())) {
             return pathWithoutQuery;
         }
         return urlPathProcessor.processPath(pathWithoutQuery);
@@ -50,12 +50,12 @@ public class RequestProcessor {
         if (null == body) {
             return null;
         }
-        if (!Tools.isMarker(body)){
+        if (!ArgTool.isMarker(body)) {
             return body;
         }
 
         byte[] result = RequestBodyProcessor.replacePlaceholders(body.getBytes(), headers);
-        if (null == result || 0 == result.length){
+        if (null == result || 0 == result.length) {
             logger.logToOutput("replacePlaceholders return null");
             return body;
         }

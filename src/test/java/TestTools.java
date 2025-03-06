@@ -1,17 +1,17 @@
 import burp.api.montoya.core.ByteArray;
 import org.junit.Test;
 import oxff.org.model.VariableInfo;
+import oxff.org.utils.ArgTool;
 import oxff.org.utils.Tools;
 
 import java.util.List;
 
-import static oxff.org.utils.Tools.extractBodyVariableInfos;
 
 public class TestTools {
     @Test
     public void testExtractVariables(){
         String httpRawRequest = "GET /api/resource/{{ id }} HTTP/1.1\r\nHost: {{host}}\r\n\r\n";
-        List<VariableInfo> variables = extractBodyVariableInfos(httpRawRequest);
+        List<VariableInfo> variables = ArgTool.extractBodyVariableInfos(httpRawRequest);
         System.out.println("Variables len:%d".formatted(variables.size()));
         for (VariableInfo variable : variables) {
             System.out.println("Variable Name: " + variable.name);
@@ -25,7 +25,7 @@ public class TestTools {
     public void testMarker(){
         String body = "{{id}}";
         ByteArray bodyByteArray = ByteArray.byteArray(body);
-        System.out.println("Marker: " + Tools.isMarker(bodyByteArray));
+        System.out.println("Marker: " + ArgTool.isMarker(bodyByteArray));
     }
 
 }
