@@ -340,9 +340,7 @@ public class ArgDialog extends JDialog {
                 updateAutoUpdateTypeComboBoxItems(ArgType.ALL);
                 return;
             }
-            SwingUtilities.invokeLater(() -> {
-                updateAutoUpdateTypeComboBoxItems(argType);
-            });
+            SwingUtilities.invokeLater(() -> updateAutoUpdateTypeComboBoxItems(argType));
         });
 
         autoUpdateTypeComboBox.addActionListener(e -> autoUpdateTypeComboBoxActionListenerInit());
