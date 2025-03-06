@@ -38,6 +38,22 @@ jobs:
           JAR_FILE=$(ls target/environment-*.jar | head -n 1)
           echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
 
+      # 新增步骤：动态生成发布说明
+      - name: Generate Release Notes
+        id: generate_release_notes
+        run: |
+          # 提取当前 tag 的提交记录
+          RELEASE_NOTES=$(git log $(git describe --tags --abbrev=0 @^)..@ --pretty=format:'- %s')
+          
+          # 如果没有提交记录，则提供默认说明
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="- 无明确的提交记录"
+          fi
+          
+          # 优化措辞并保存到环境变量
+          RELEASE_BODY="### 版本 ${{ github.ref_name }} 发布说明\n\n本次版本更新包含以下改进和修复：\n${RELEASE_NOTES}"
+          echo "RELEASE_BODY=${RELEASE_BODY}" >> $GITHUB_ENV
+
       # 步骤 6：创建 Release
       - name: Create Release
         id: create_release
@@ -47,8 +63,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
-          body: |
-            这是 ${{ github.ref_name }} 版本的发布说明。
+          body: ${{ env.RELEASE_BODY }}
           draft: false
           prerelease: false
 
