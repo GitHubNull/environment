@@ -1,0 +1,54 @@
+name: Maven Release
+
+# 触发条件：当有新的 tag 被推送到仓库时
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步骤 1：检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 步骤 2：设置 Java 环境
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # 步骤 3：使用 Maven 编译项目
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      # 步骤 4：创建 Release 并上传 JAR 包
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            这是 ${{ github.ref_name }} 版本的发布说明。
+          draft: false
+          prerelease: false
+
+      # 步骤 5：上传 JAR 包到 Release
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/environment-*.jar
+          asset_name: environment-${{ github.ref_name }}.jar
+          asset_content_type: application/java-archive
