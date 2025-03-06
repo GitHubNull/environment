@@ -27,7 +27,18 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-      # 步骤 4：创建 Release 并上传 JAR 包
+      # 步骤 4：列出 target 目录内容（调试步骤）
+      - name: List target directory contents
+        run: ls -l target/
+
+      # 步骤 5：动态获取生成的 JAR 文件路径
+      - name: Find generated JAR file
+        id: find_jar
+        run: |
+          JAR_FILE=$(ls target/environment-*.jar | head -n 1)
+          echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
+
+      # 步骤 6：创建 Release
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -41,7 +52,7 @@ jobs:
           draft: false
           prerelease: false
 
-      # 步骤 5：上传 JAR 包到 Release
+      # 步骤 7：上传 JAR 包到 Release
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -49,6 +60,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/environment-*_*.jar
+          asset_path: ${{ env.JAR_FILE }}
           asset_name: environment-${{ github.ref_name }}.jar
           asset_content_type: application/java-archive
