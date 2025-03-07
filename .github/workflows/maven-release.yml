@@ -60,9 +60,9 @@ jobs:
           fi
           
           # 优化措辞并保存到环境变量
-          RELEASE_BODY=”## 版本 ${{ github.ref_name }} 发布说明
-          本次版本更新包含以下改进和修复
-          ${RELEASE_NOTES}“
+          RELEASE_BODY=”## 版本 ${{ github.ref_name }} 发布说明\n \
+          本次版本更新包含以下改进和修复\n \
+          ${RELEASE_NOTES}\n“
           echo "RELEASE_BODY=\"$RELEASE_BODY\"" >> $GITHUB_ENV
 
       # 步骤 6：创建 Release
