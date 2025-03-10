@@ -1,6 +1,5 @@
 name: Maven Release
 
-# 触发条件：当有新的 tag 被推送到仓库时
 on:
   push:
     tags:
@@ -11,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 步骤 1：检出代码
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 获取完整的 Git 历史记录用于生成日志
 
-      # 步骤 2：设置 Java 环境
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
@@ -23,49 +22,46 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # 步骤 3：使用 Maven 编译项目
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-      # 步骤 4：列出 target 目录内容（调试步骤）
-      - name: List target directory contents
-        run: ls -l target/
-
-      # 步骤 5：动态获取生成的 JAR 文件路径
       - name: Find generated JAR file
         id: find_jar
         run: |
-          if [ -z "$(ls target/environment-*.jar 2>/dev/null)" ]; then
-            echo "Error: No JAR file found in target directory."
+          JAR_FILE=$(ls target/environment-*.jar | head -n 1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "::error::No JAR file found in target directory"
             exit 1
           fi
-          JAR_FILE=$(ls target/environment-*.jar | head -n 1)
           echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
 
-      # 新增步骤：动态生成发布说明
       - name: Generate Release Notes
         id: generate_release_notes
         run: |
-          # 检查是否为首次创建 tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 @^ || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            RELEASE_NOTES=$(git log --pretty=format:'- %s')
-          else
-            RELEASE_NOTES=$(git log $PREVIOUS_TAG..@ --pretty=format:'- %s')
-          fi
-          
-          # 如果没有提交记录，则提供默认说明
-          if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="- 无明确的提交记录"
-          fi
-          
-          # 优化措辞并保存到环境变量
-          RELEASE_BODY="## 版本 ${{ github.ref_name }} 发布说明\n \
-          本次版本更新包含以下改进和修复\n \
-          ${RELEASE_NOTES}\n"
-          echo "RELEASE_BODY=\"$RELEASE_BODY\"" >> $GITHUB_ENV
+          # 获取当前标签名称
+          CURRENT_TAG=${{ github.ref_name }}
 
-      # 步骤 6：创建 Release
+          # 获取前一个标签（如果存在）
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || echo "")
+
+          # 生成提交日志
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMIT_LOG=$(git log --pretty=format:'- %s (%h)')
+          else
+            COMMIT_LOG=$(git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:'- %s (%h)')
+          fi
+
+          # 写入文件（使用 Markdown 格式并保留换行）
+          {
+            echo "## 版本 $CURRENT_TAG 发布说明"
+            echo ""
+            echo "本次更新包含以下变更："
+            echo ""
+            echo "$COMMIT_LOG"
+            echo ""
+            echo "> 由 GitHub Actions 自动生成"
+          } > release_notes.md
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -74,14 +70,11 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
-          body: |
-            ${{ env.RELEASE_BODY }}
+          body_path: release_notes.md  # 从文件读取内容（自动保留换行）
           draft: false
           prerelease: false
 
-      # 步骤 7：上传 JAR 包到 Release
       - name: Upload Release Asset
-        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,4 +83,3 @@ jobs:
           asset_path: ${{ env.JAR_FILE }}
           asset_name: environment-${{ github.ref_name }}.jar
           asset_content_type: application/java-archive
-
