@@ -28,8 +28,8 @@ jobs:
       - name: Find generated JAR files
         id: find_jar
         run: |
-          # 查找带时间戳的 fat JAR
-          TIMESTAMPED_JAR=$(ls target/environment-*-20*.jar 2>/dev/null | head -n 1)
+          # 查找带时间戳的 fat JAR（文件名格式：environment-{version}_{yyyyMMdd_HHmm}.jar）
+          TIMESTAMPED_JAR=$(ls target/environment-*_20*.jar 2>/dev/null | head -n 1)
           if [ -z "$TIMESTAMPED_JAR" ]; then
             echo "::error::No timestamped JAR file found in target directory"
             exit 1
