@@ -6,7 +6,7 @@
 
     <groupId>org.oxff</groupId>
     <artifactId>environment</artifactId>
-    <version>1.0</version>
+    <version>0.1.12</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -42,13 +42,35 @@
             <version>1.16.0</version>
         </dependency>
 
+        <!-- SQLite3 JDBC Driver -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.49.1.0</version>
+        </dependency>
+
+        <!-- SnakeYAML for YAML import/export -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.3</version>
+        </dependency>
 
     </dependencies>
 
     <build>
-        <!--suppress UnresolvedMavenProperty -->
-        <finalName>${project.artifactId}-${project.version}_${build.time}</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -56,6 +78,7 @@
                 <executions>
                     <execution>
                         <id>timestamp-property</id>
+                        <phase>validate</phase>
                         <goals>
                             <goal>timestamp-property</goal>
                         </goals>
@@ -70,7 +93,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
                 <configuration>
+                    <finalName>${project.artifactId}-${project.version}_${build.time}</finalName>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -80,6 +105,24 @@
                     <execution>
                         <phase>package</phase>
                         <goals><goal>single</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-fat-jar-without-timestamp</id>
+                        <phase>package</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <copy file="${project.build.directory}/${project.artifactId}-${project.version}_${build.time}.jar"
+                                      tofile="${project.build.directory}/${project.artifactId}-${project.version}.jar"/>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

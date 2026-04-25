@@ -10,7 +10,7 @@ import java.util.List;
 public class ArgTableModel extends AbstractTableModel {
     private final static String[] columnNames = {
             "ID", "Name", "Type", "AutoUpdateType", "Length", "DefaultValue", "Value", "Method", "Script", "CodePath",
-            "Enable", "Description"
+            "Enable", "Description", "Persistent"
     };
     private final List<Arg> argList;
 
@@ -48,6 +48,7 @@ public class ArgTableModel extends AbstractTableModel {
             case 9 -> null == arg.getCodePath() ? "" : arg.getCodePath();
             case 10 -> arg.isEnabled();
             case 11 -> null == arg.getDescription() ? "" : arg.getDescription();
+            case 12 -> arg.isPersistent();
             default -> null;
         };
     }
@@ -59,7 +60,7 @@ public class ArgTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return 10 == columnIndex;
+        return 10 == columnIndex || 12 == columnIndex;
     }
 
     @Override
@@ -70,6 +71,7 @@ public class ArgTableModel extends AbstractTableModel {
             case 2 -> ArgType.class;
             case 3 -> AutoUpdateType.class;
             case 10 -> Boolean.class;
+            case 12 -> Boolean.class;
             default -> null;
         };
     }
@@ -109,6 +111,9 @@ public class ArgTableModel extends AbstractTableModel {
                 break;
             case 11:
                 arg.setDescription((String) aValue);
+                break;
+            case 12:
+                arg.setPersistent((boolean) aValue);
                 break;
             case 5:
             default:

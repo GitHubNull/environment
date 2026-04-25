@@ -8,11 +8,15 @@ import oxff.org.controler.EnviHttpHandler;
 import oxff.org.model.Arg;
 import oxff.org.model.ArgTableModel;
 import oxff.org.model.AutoUpdateType;
+import oxff.org.persistence.PersistenceManager;
 import oxff.org.ui.EnvironmentTab;
 import oxff.org.ui.PopUpMenu;
+import oxff.org.utils.GroovyUtils;
 import oxff.org.utils.Tools;
 
+import java.io.File;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +41,7 @@ public class Environment implements BurpExtension {
 //    public static Map<String, Arg> argsMap;
     public static Map<AutoUpdateType, Method> autoUpdateMethods;
     public static Map<String, Script> groovyScripts;
+    public static PersistenceManager persistenceManager;
     @Override
     public void initialize(MontoyaApi montoyaApi) {
         this.montoyaApi = montoyaApi;
@@ -92,6 +97,23 @@ public class Environment implements BurpExtension {
             throw new RuntimeException(e);
         }
 
+        // 初始化持久化层
+        String dbDir = System.getProperty("user.dir") + File.separator + "environment";
+        new File(dbDir).mkdirs();
+        String dbPath = dbDir + File.separator + "environment.db";
+        persistenceManager = new PersistenceManager(dbPath);
+        try {
+            persistenceManager.initDatabase();
+            List<Arg> persistedArgs = persistenceManager.loadAll();
+            for (Arg arg : persistedArgs) {
+                reconstructMethodAndScript(arg);
+                argTableModel.addArg(arg);
+            }
+            logger.logToOutput("Loaded " + persistedArgs.size() + " persisted args from database.");
+        } catch (SQLException e) {
+            logger.logToError("Failed to initialize persistence: " + e.getMessage());
+        }
+
         logger.logToOutput("Initialized " + extensionName + " v" + extensionVersion);
         logger.logToOutput("Author: " + extensionAuthor);
         logger.logToOutput("Website: " + extensionWebsite);
@@ -107,5 +129,22 @@ public class Environment implements BurpExtension {
 
     synchronized public static int getArgListSize(){
         return args.size();
+    }
+
+    public static void reconstructMethodAndScript(Arg arg) {
+        AutoUpdateType autoUpdateType = arg.getAutoUpdateType();
+        arg.setMethod(autoUpdateMethods.get(autoUpdateType));
+
+        if (autoUpdateType == AutoUpdateType.Groovy_CODE && arg.getCodePath() != null
+                && !arg.getCodePath().isBlank()) {
+            try {
+                Script script = GroovyUtils.getScript(arg.getCodePath());
+                arg.setScript(script);
+                groovyScripts.put(arg.getName(), script);
+            } catch (Exception e) {
+                logger.logToError("Failed to load groovy script for " + arg.getName()
+                        + ": " + e.getMessage());
+            }
+        }
     }
 }

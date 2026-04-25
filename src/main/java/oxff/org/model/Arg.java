@@ -18,6 +18,7 @@ public class Arg {
     String codePath;
     boolean enabled = true;
     String description;
+    boolean persistent = true;
 
     public Arg() {
     }
@@ -128,9 +129,17 @@ public class Arg {
         this.description = description;
     }
 
+    public boolean isPersistent() {
+        return persistent;
+    }
+
+    public void setPersistent(boolean persistent) {
+        this.persistent = persistent;
+    }
+
     @Override
     public String toString() {
-        return "Arg{" + "id=" + id + ", name=" + name + ", type=" + type + ", autoUpdateType=" + autoUpdateType + ", defaultValue=" + defaultValue + ", value=" + value + ", description=" + description + '}';
+        return "Arg{" + "id=" + id + ", name=" + name + ", type=" + type + ", autoUpdateType=" + autoUpdateType + ", defaultValue=" + defaultValue + ", value=" + value + ", description=" + description + ", persistent=" + persistent + '}';
     }
 
     @Override
@@ -144,11 +153,11 @@ public class Arg {
         Arg arg = (Arg) o;
         return Objects.equals(name,
                               arg.name) && type == arg.type && autoUpdateType == arg.autoUpdateType && Objects.equals(
-                defaultValue, arg.defaultValue) && Objects.equals(value, arg.value);
+                defaultValue, arg.defaultValue) && Objects.equals(value, arg.value) && persistent == arg.persistent;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, type, autoUpdateType, defaultValue, value, description);
+        return Objects.hash(id, name, type, autoUpdateType, defaultValue, value, description, persistent);
     }
 }

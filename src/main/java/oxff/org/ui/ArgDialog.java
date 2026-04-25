@@ -12,6 +12,7 @@ import oxff.org.utils.GroovyUtils;
 import oxff.org.utils.StringTool;
 import oxff.org.utils.Tools;
 import oxff.org.utils.sec.sha.StringShaTools;
+import oxff.org.persistence.PersistenceManager;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -53,6 +54,7 @@ public class ArgDialog extends JDialog {
     private JButton codePathButtonChooseFile;
     private JTextField argDescriptionTextField;
     private JCheckBox enabledCheckBox;
+    private JCheckBox persistentCheckBox;
     private JButton okButton;
     private JButton cancelButton;
 
@@ -142,6 +144,7 @@ public class ArgDialog extends JDialog {
         argCodePathTextField.setText(arg.getCodePath());
         argDescriptionTextField.setText(arg.getDescription());
         enabledCheckBox.setSelected(arg.isEnabled());
+        persistentCheckBox.setSelected(arg.isPersistent());
     }
 
     private void initUIStatusByArgDialogOpType() {
@@ -174,6 +177,7 @@ public class ArgDialog extends JDialog {
         argCodePathTextField.setEnabled(enable);
         argDescriptionTextField.setEnabled(enable);
         enabledCheckBox.setEnabled(enable);
+        persistentCheckBox.setEnabled(enable);
     }
 
     private void disableAllFields() {
@@ -187,7 +191,7 @@ public class ArgDialog extends JDialog {
         setLayout(new BorderLayout());
 
         northPanel = new JPanel();
-        northPanel.setLayout(new GridLayout(9, 3));
+        northPanel.setLayout(new GridLayout(10, 3));
 
         JLabel argNameLabel = new JLabel("arg name: ");
         argNameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -283,6 +287,17 @@ public class ArgDialog extends JDialog {
 
         northPanel.add(enabledLabel);
         northPanel.add(enabledCheckBox);
+        northPanel.add(new JLabel());
+
+        JLabel persistentLabel = new JLabel("persistent: ");
+        persistentLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        persistentCheckBox = new JCheckBox("persistent");
+        persistentCheckBox.setEnabled(true);
+        persistentCheckBox.setSelected(true);
+
+        northPanel.add(persistentLabel);
+        northPanel.add(persistentCheckBox);
         northPanel.add(new JLabel());
 
         add(northPanel, BorderLayout.NORTH);
@@ -444,7 +459,17 @@ public class ArgDialog extends JDialog {
             arg.setCodePath(argCodePathTextField.getText());
             arg.setDescription(argDescriptionTextField.getText());
             arg.setEnabled(enabledCheckBox.isSelected());
+            arg.setPersistent(persistentCheckBox.isSelected());
             Environment.argTableModel.updateArgByRow(selectedRow, arg);
+
+            // 持久化到数据库
+            if (arg.isPersistent() && Environment.persistenceManager != null) {
+                try {
+                    Environment.persistenceManager.save(arg);
+                } catch (Exception e) {
+                    logger.logToError("Failed to persist arg: " + e.getMessage());
+                }
+            }
             logger.logToOutput("arg edited: " + arg.getName());
         } catch (Exception e) {
             logger.logToError("edit arg error: " + e.getMessage());
@@ -651,8 +676,18 @@ public class ArgDialog extends JDialog {
             }
         }
         arg.setEnabled(enabledCheckBox.isSelected());
+        arg.setPersistent(persistentCheckBox.isSelected());
         enviTab.getArgTableModel().addArg(arg);
 //        Environment.argsMap.put(name, arg);
+
+        // 持久化到数据库
+        if (arg.isPersistent() && Environment.persistenceManager != null) {
+            try {
+                Environment.persistenceManager.save(arg);
+            } catch (Exception e) {
+                logger.logToError("Failed to persist arg: " + e.getMessage());
+            }
+        }
 
         dispose();
     }

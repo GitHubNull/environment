@@ -1,18 +1,26 @@
 package oxff.org.ui;
 
 import burp.api.montoya.logging.Logging;
+import groovy.lang.Script;
 import oxff.org.Environment;
 import oxff.org.model.Arg;
 import oxff.org.model.ArgDialogOpType;
 import oxff.org.model.ArgTableModel;
+import oxff.org.model.AutoUpdateType;
+import oxff.org.utils.GroovyUtils;
+import oxff.org.utils.YamlExporter;
+import oxff.org.utils.YamlImporter;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
 public class EnvironmentTab extends JPanel {
@@ -26,6 +34,8 @@ public class EnvironmentTab extends JPanel {
     private JButton queryButton;
     private JButton moveUpButton;
     private JButton moveDownButton;
+    private JButton importButton;
+    private JButton exportButton;
     private JTable argTable;
     private TableRowSorter<TableModel> sorter;
 
@@ -51,6 +61,8 @@ public class EnvironmentTab extends JPanel {
         queryButton = new JButton("Query");
         moveUpButton = new JButton("Move Up");
         moveDownButton = new JButton("Move Down");
+        importButton = new JButton("Import");
+        exportButton = new JButton("Export");
 
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
@@ -58,6 +70,8 @@ public class EnvironmentTab extends JPanel {
         buttonPanel.add(editButton);
         buttonPanel.add(moveUpButton);
         buttonPanel.add(moveDownButton);
+        buttonPanel.add(importButton);
+        buttonPanel.add(exportButton);
 
         searchPanel.add(searchField);
         searchPanel.add(queryButton);
@@ -116,7 +130,15 @@ public class EnvironmentTab extends JPanel {
             }
             for (int i = selectedRows.length - 1; i >= 0; i--) {
                 int row = selectedRows[i];
+                Arg arg = argTableModel.getArg(row);
                 argTableModel.removeArg(row);
+                if (Environment.persistenceManager != null) {
+                    try {
+                        Environment.persistenceManager.delete(arg.getId());
+                    } catch (Exception ex) {
+                        logger.logToError("Failed to delete from db: " + ex.getMessage());
+                    }
+                }
             }
         });
 
@@ -126,6 +148,13 @@ public class EnvironmentTab extends JPanel {
                 return;
             }
             argTableModel.removeAll();
+            if (Environment.persistenceManager != null) {
+                try {
+                    Environment.persistenceManager.deleteAll();
+                } catch (Exception ex) {
+                    logger.logToError("Failed to clear db: " + ex.getMessage());
+                }
+            }
         });
 
         editButton.addActionListener(e -> {
@@ -164,6 +193,70 @@ public class EnvironmentTab extends JPanel {
         moveUpButton.addActionListener(e -> moveSelectedRow(-1));
 
         moveDownButton.addActionListener(e -> moveSelectedRow(1));
+
+        importButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new FileNameExtensionFilter("YAML files (*.yaml, *.yml)", "yaml", "yml"));
+            if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+            File file = fileChooser.getSelectedFile();
+            try {
+                List<Arg> importedArgs = YamlImporter.importFromFile(file);
+                int maxId = getMaxArgId();
+                int importedCount = 0;
+                int skippedCount = 0;
+
+                for (Arg arg : importedArgs) {
+                    if (argTableModel.getArgByName(arg.getName()) != null) {
+                        logger.logToOutput("Skipping duplicate arg: " + arg.getName());
+                        skippedCount++;
+                        continue;
+                    }
+                    arg.setId(++maxId);
+                    reconstructMethodAndScript(arg);
+                    argTableModel.addArg(arg);
+                    if (arg.isPersistent() && Environment.persistenceManager != null) {
+                        try {
+                            Environment.persistenceManager.save(arg);
+                        } catch (Exception ex) {
+                            logger.logToError("Failed to persist imported arg: " + ex.getMessage());
+                        }
+                    }
+                    importedCount++;
+                }
+
+                JOptionPane.showMessageDialog(this,
+                        String.format("Imported %d args, skipped %d duplicates.", importedCount, skippedCount));
+            } catch (Exception ex) {
+                logger.logToError("Import failed: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Import failed: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        exportButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new FileNameExtensionFilter("YAML files (*.yaml)", "yaml"));
+            fileChooser.setSelectedFile(new File("environment_export.yaml"));
+            if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+            File file = fileChooser.getSelectedFile();
+            if (!file.getName().endsWith(".yaml")) {
+                file = new File(file.getAbsolutePath() + ".yaml");
+            }
+            try {
+                List<Arg> allArgs = argTableModel.getArgList();
+                YamlExporter.exportToFile(allArgs, file);
+                JOptionPane.showMessageDialog(this,
+                        "Exported " + allArgs.size() + " args to " + file.getName());
+            } catch (Exception ex) {
+                logger.logToError("Export failed: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         argTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -208,5 +301,33 @@ public class EnvironmentTab extends JPanel {
         int viewRow = argTable.convertRowIndexToView(targetRow);
         argTable.setRowSelectionInterval(viewRow, viewRow);
         argTable.scrollRectToVisible(argTable.getCellRect(viewRow, 0, true));
+    }
+
+    private int getMaxArgId() {
+        int maxId = 0;
+        for (int i = 0; i < argTableModel.getArgList().size(); i++) {
+            Arg arg = argTableModel.getArg(i);
+            if (arg.getId() > maxId) {
+                maxId = arg.getId();
+            }
+        }
+        return maxId;
+    }
+
+    private void reconstructMethodAndScript(Arg arg) {
+        AutoUpdateType autoUpdateType = arg.getAutoUpdateType();
+        arg.setMethod(Environment.autoUpdateMethods.get(autoUpdateType));
+
+        if (autoUpdateType == AutoUpdateType.Groovy_CODE && arg.getCodePath() != null
+                && !arg.getCodePath().isBlank()) {
+            try {
+                Script script = GroovyUtils.getScript(arg.getCodePath());
+                arg.setScript(script);
+                Environment.groovyScripts.put(arg.getName(), script);
+            } catch (Exception e) {
+                logger.logToError("Failed to load groovy script for " + arg.getName()
+                        + ": " + e.getMessage());
+            }
+        }
     }
 }

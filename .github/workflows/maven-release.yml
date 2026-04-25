@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 获取完整的 Git 历史记录用于生成日志
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -25,15 +25,23 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-      - name: Find generated JAR file
+      - name: Find generated JAR files
         id: find_jar
         run: |
-          JAR_FILE=$(ls target/environment-*.jar | head -n 1)
-          if [ -z "$JAR_FILE" ]; then
-            echo "::error::No JAR file found in target directory"
+          # 查找带时间戳的 fat JAR
+          TIMESTAMPED_JAR=$(ls target/environment-*-20*.jar 2>/dev/null | head -n 1)
+          if [ -z "$TIMESTAMPED_JAR" ]; then
+            echo "::error::No timestamped JAR file found in target directory"
             exit 1
           fi
-          echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
+          # 查找不带时间戳的 fat JAR（由 maven-antrun-plugin 复制生成）
+          PLAIN_JAR="target/environment-${GITHUB_REF_NAME#v}.jar"
+          if [ ! -f "$PLAIN_JAR" ]; then
+            echo "::error::No plain JAR file found: $PLAIN_JAR"
+            exit 1
+          fi
+          echo "TIMESTAMPED_JAR=$TIMESTAMPED_JAR" >> $GITHUB_ENV
+          echo "PLAIN_JAR=$PLAIN_JAR" >> $GITHUB_ENV
 
       - name: Generate Release Notes
         id: generate_release_notes
@@ -62,24 +70,16 @@ jobs:
             echo "> 由 GitHub Actions 自动生成"
           } > release_notes.md
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body_path: release_notes.md  # 从文件读取内容（自动保留换行）
+          name: Release ${{ github.ref_name }}
+          body_path: release_notes.md
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.JAR_FILE }}
-          asset_name: environment-${{ github.ref_name }}.jar
-          asset_content_type: application/java-archive
+          files: |
+            ${{ env.PLAIN_JAR }}
+            ${{ env.TIMESTAMPED_JAR }}
