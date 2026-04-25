@@ -45,7 +45,7 @@
 
 如果您发现本工具存在安全漏洞或其他安全问题，请通过以下方式负责任地披露：
 
-- GitHub Issues：[https://github.com/GitHubNull/environment/issues](https://github.com/GitHubNull/environment/issues)
+- GitHub Issues：[https://github.com/oxff/burp-environment/issues](https://github.com/oxff/burp-environment/issues)
 
 请不要公开披露漏洞细节，以便我们有时间修复问题。
 
@@ -55,4 +55,4 @@
 
 ---
 
-**最后更新日期**：2024年
+**最后更新日期**：2026年4月

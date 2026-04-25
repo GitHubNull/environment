@@ -32,7 +32,7 @@ public class TutorialPanel extends JPanel {
 
             ### 1.2 安装插件
 
-            1. 下载或编译得到 `environment-1.0_yyyyMMdd_HHmm.jar` 文件。
+            1. 下载或编译得到 `environment-0.1.13_yyyyMMdd_HHmm.jar` 文件。
             2. 打开 Burp Suite，点击菜单栏 **Extensions → Installed → Add**。
             3. Extension type 选择 **Java**。
             4. 点击 **Select file**，选择下载的 JAR 文件。
@@ -293,10 +293,10 @@ public class TutorialPanel extends JPanel {
 
             ### 6.2 脚本规范
 
-            脚本必须包含一个名为 `modify` 的方法，接收一个 `Map<String, String>` 参数：
+            脚本必须包含一个名为 `modifyArg` 的方法，接收一个 `Map<String, String>` 参数：
 
             ```groovy
-            def modify(Map<String, String> params) {
+            def modifyArg(Map<String, String> params) {
                 // params 的 key 是参数名，value 是当前值
                 def name = params.keySet().iterator().next()
                 def value = params.get(name)
@@ -308,7 +308,7 @@ public class TutorialPanel extends JPanel {
             ### 6.3 示例一：带前缀的时间戳
 
             ```groovy
-            def modify(Map<String, String> params) {
+            def modifyArg(Map<String, String> params) {
                 def name = params.keySet().iterator().next()
                 def value = params.get(name)
                 return "REQ_" + System.currentTimeMillis()
@@ -318,7 +318,7 @@ public class TutorialPanel extends JPanel {
             ### 6.4 示例二：基于当前值的变换
 
             ```groovy
-            def modify(Map<String, String> params) {
+            def modifyArg(Map<String, String> params) {
                 def name = params.keySet().iterator().next()
                 def value = params.get(name)
                 // 将值反转并加上后缀
@@ -329,7 +329,7 @@ public class TutorialPanel extends JPanel {
             ### 6.5 示例三：生成特定格式的订单号
 
             ```groovy
-            def modify(Map<String, String> params) {
+            def modifyArg(Map<String, String> params) {
                 def date = new Date().format("yyyyMMdd")
                 def random = (new Random().nextInt(9000) + 1000).toString()
                 return "ORD-${date}-${random}"
@@ -384,7 +384,7 @@ public class TutorialPanel extends JPanel {
 
             **排查步骤：**
 
-            1. 确认脚本中包含 `modify(Map<String, String>)` 方法。
+            1. 确认脚本中包含 `modifyArg(Map<String, String>)` 方法。
             2. 确认方法返回值为 `String` 类型。
             3. 确认脚本文件路径正确且文件存在。
             4. 查看 Burp 的 Extensions 错误日志获取详细信息。
@@ -439,8 +439,8 @@ public class TutorialPanel extends JPanel {
 
             ---
 
-            **文档版本**：1.0
-            **最后更新**：2024年
+            **文档版本**：0.1.13
+            **最后更新**：2026年4月
             """;
 
     public TutorialPanel() {

@@ -48,7 +48,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/GitHubNull/environment.git
+   git clone https://github.com/oxff/burp-environment.git
    cd environment
    ```
 
@@ -57,7 +57,7 @@
    mvn clean package
    ```
 
-3. The fat JAR will be located in the `target` directory, named `environment-1.0_yyyyMMdd_HHmm.jar`.
+3. The fat JAR will be located in the `target` directory, named `environment-0.1.13_yyyyMMdd_HHmm.jar` (a plain `environment-0.1.13.jar` is also generated without the timestamp).
 
 ### Install into Burp Suite
 
@@ -148,14 +148,14 @@ The extension automatically replaces markers with the latest parameter values be
 Create a file named `modify.groovy`:
 
 ```groovy
-def modify(Map<String, String> params) {
+def modifyArg(Map<String, String> params) {
     def name = params.keySet().iterator().next()
     def value = params.get(name)
     return "custom_" + value + "_" + System.currentTimeMillis()
 }
 ```
 
-When adding a parameter, select **auto update type** as `Groovy_CODE` and specify the script path.
+When adding a parameter, select **auto update type** as `Groovy_CODE` and specify the script path. The Groovy script must define a `modifyArg(Map<String, String>)` method.
 
 ---
 
@@ -185,12 +185,13 @@ This project is intended for security research and authorized testing only. Ensu
 
 ## Contact
 
-- GitHub Issues: [https://github.com/GitHubNull/environment/issues](https://github.com/GitHubNull/environment/issues)
+- GitHub Issues: [https://github.com/oxff/burp-environment/issues](https://github.com/oxff/burp-environment/issues)
 
 ---
 
 ## Related Documents
 
 - [Tutorial](doc/tutorial.md)
+- [Changelog](doc/CHANGELOG.md)
 - [Chinese README](README.md)
 - [AGENT.md](AGENT.md)

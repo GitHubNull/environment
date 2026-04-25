@@ -11,7 +11,9 @@
 - **功能**：在 HTTP 请求发送前，自动替换请求中 `{{variableName}}` 标记的变量为动态生成的值。
 - **语言**：Java 17
 - **构建**：Maven
+- **版本**：`0.1.13`（见 `pom.xml`，`Environment.java` 中 `extensionVersion` 硬编码为 `"1.0"`，以 `pom.xml` 为准）
 - **入口类**：[`oxff.org.Environment`](src/main/java/oxff/org/Environment.java)
+- **仓库地址**：https://github.com/oxff/burp-environment
 
 ---
 
@@ -20,33 +22,36 @@
 ```
 src/main/java/oxff/org/
 ├── Environment.java                 # 插件入口，实现 BurpExtension 接口
-├── GlobalConst.java                 # 全局常量
+├── GlobalConst.java                 # 全局常量（变量标记符等）
 ├── controler/
 │   └── EnviHttpHandler.java         # HTTP 请求处理器，注册到 Burp
 ├── model/
 │   ├── Arg.java                     # 参数实体类
-│   ├── ArgDialogOpType.java         # 对话框操作类型枚举（ADD/EDIT/VIEW）
+│   ├── ArgDialogOpType.java         # 对话框操作类型枚举（ADD/EDIT/VIEW/DELETE）
 │   ├── ArgTableModel.java           # 参数表格数据模型
 │   ├── ArgType.java                 # 参数类型枚举（TEXT/NUMBER/ALL）
 │   ├── AutoUpdateType.java          # 自动更新类型枚举
 │   ├── HeaderLineVariableInfo.java  # 请求头变量信息
 │   └── VariableInfo.java            # 通用变量信息
 ├── persistence/
-│   └── PersistenceManager.java      # SQLite 数据库操作
+│   └── PersistenceManager.java      # SQLite 数据库操作（CRUD）
 ├── ui/
-│   ├── ArgDialog.java               # 参数添加/编辑对话框
-│   ├── EnvironmentTab.java          # 插件主界面（Swing Tab）
-│   └── PopUpMenu.java               # 右键上下文菜单
+│   ├── AboutPanel.java              # "关于"标签页（内嵌 MIT License 和安全声明）
+│   ├── ArgDialog.java               # 参数添加/编辑/查看对话框
+│   ├── EnvironmentTab.java          # 插件主界面（Swing Tab，含参数管理/关于/教程三个子标签页）
+│   ├── PopUpMenu.java               # 右键上下文菜单
+│   └── TutorialPanel.java           # "教程"标签页（内嵌完整使用教程）
 └── utils/
     ├── requestProcessor/            # 请求处理链
     │   ├── RequestProcessor.java    # 请求处理器总控
-    │   ├── bodyProcessor/           # 请求体处理
+    │   ├── bodyProcessor/           # 请求体处理（Form/Multipart/Text/JSON）
     │   ├── headerProcessor/         # 请求头处理
     │   ├── urlPathProcessor/        # URL 路径处理
     │   └── urlQueryProcessor/       # URL 查询参数处理
-    ├── sec/sha/                     # SHA 工具类
-    ├── ArgTool.java                 # 参数工具类（变量提取、标记检测）
-    ├── GroovyUtils.java             # Groovy 脚本加载与执行
+    ├── sec/sha/                     # SHA 工具类（ByteArray/File/String）
+    ├── ArgTool.java                 # 参数工具类（变量提取、标记检测、值刷新）
+    ├── GroovyUtils.java             # Groovy 脚本加载、缓存与执行
+    ├── MarkdownRenderer.java        # Markdown 转 HTML 渲染器
     ├── StringTool.java              # 字符串工具
     ├── Tools.java                   # 自动更新值生成工具
     ├── YamlExporter.java            # YAML 导出
@@ -65,7 +70,7 @@ src/main/java/oxff/org/
 2. 初始化参数列表 `args` 和表格模型 `argTableModel`。
 3. 建立 `AutoUpdateType` 到 `Method` 的映射 `autoUpdateMethods`，用于后续反射调用生成值。
 4. 初始化 SQLite 持久化层，从数据库加载已保存的参数。
-5. 注册 Suite Tab（[`EnvironmentTab`](src/main/java/oxff/org/ui/EnvironmentTab.java)）。
+5. 注册 Suite Tab（[`EnvironmentTab`](src/main/java/oxff/org/ui/EnvironmentTab.java)），包含三个子标签页：**参数管理**、**关于**（[AboutPanel](src/main/java/oxff/org/ui/AboutPanel.java)）、**教程**（[TutorialPanel](src/main/java/oxff/org/ui/TutorialPanel.java)）。
 6. 注册右键菜单（[`PopUpMenu`](src/main/java/oxff/org/ui/PopUpMenu.java)）。
 7. 注册 HTTP 处理器（[`EnviHttpHandler`](src/main/java/oxff/org/controler/EnviHttpHandler.java)）。
 
@@ -100,12 +105,15 @@ src/main/java/oxff/org/
 | `Environment` | 插件入口，全局状态管理 |
 | `Arg` | 参数实体，包含名称、类型、自动更新类型、值、脚本等属性 |
 | `ArgTableModel` | Swing 表格模型，管理参数的增删改查和排序 |
-| `EnvironmentTab` | 主界面，包含按钮、搜索框、表格 |
+| `EnvironmentTab` | 主界面，包含按钮、搜索框、表格，三个子标签页 |
+| `AboutPanel` | "关于"标签页，内嵌 MIT License 和安全声明 |
+| `TutorialPanel` | "教程"标签页，内嵌完整 Markdown 使用教程 |
 | `ArgDialog` | 参数编辑对话框，包含完整的表单校验逻辑 |
 | `Tools` | 值生成器：UUID、时间戳、随机数、自增数等 |
 | `ArgTool` | 变量标记检测与提取、值生成调用 |
-| `GroovyUtils` | Groovy 脚本解析、缓存、执行 |
+| `GroovyUtils` | Groovy 脚本解析、SHA1 缓存、执行 |
 | `RequestProcessor` | 请求处理总控，协调各子处理器 |
+| `MarkdownRenderer` | Markdown 转 HTML 渲染器 |
 
 ---
 
@@ -151,8 +159,9 @@ src/main/java/oxff/org/
 # 构建
 mvn clean package
 
-# 构建产物
-target/environment-1.0_yyyyMMdd_HHmm.jar
+# 构建产物（target 目录下）
+# 带时间戳的 fat JAR：environment-0.1.13_yyyyMMdd_HHmm.jar
+# 不带时间戳的 fat JAR（由 maven-antrun-plugin 复制）：environment-0.1.13.jar
 ```
 
 ---
@@ -166,7 +175,9 @@ A: 检查 Burp 的 Extensions 输出日志，确认是否有异常。常见问�
 A: 确认参数已启用（enabled=true），且 HTTP 请求中使用了正确的 `{{variableName}}` 标记语法。
 
 **Q: Groovy 脚本执行失败？**
-A: 确认脚本文件中包含 `modify(Map<String, String>)` 方法，且文件路径正确。
+A: 
+- 确认脚本文件中包含 `modifyArg(Map<String, String>)` 方法（注意：代码中 `executeGroovyCode` 实际调用的方法名为 `modifyArg`，但 `getScript` 验证函数 `GROOVY_FUNCTION_NAME` 检查的是 `"modify"`，存在不一致——已知问题）。
+- 确认文件路径正确且文件存在。
 
 ---
 
@@ -176,3 +187,4 @@ A: 确认脚本文件中包含 `modify(Map<String, String>)` 方法，且文件�
 - [README_EN.md](README_EN.md)
 - [LICENSE](LICENSE)
 - [SECURITY.md](SECURITY.md)
+- [CHANGELOG.md](doc/CHANGELOG.md)

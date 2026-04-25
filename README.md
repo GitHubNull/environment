@@ -48,7 +48,7 @@
 
 1. 克隆项目代码：
    ```bash
-   git clone https://github.com/GitHubNull/environment.git
+   git clone https://github.com/oxff/burp-environment.git
    cd environment
    ```
 
@@ -57,7 +57,7 @@
    mvn clean package
    ```
 
-3. 构建完成后，带依赖的 JAR 文件位于 `target` 目录下，文件名格式为 `environment-1.0_yyyyMMdd_HHmm.jar`。
+3. 构建完成后，带依赖的 JAR 文件位于 `target` 目录下，文件名格式为 `environment-0.1.13_yyyyMMdd_HHmm.jar`（同时会生成不带时间戳的 `environment-0.1.13.jar`）。
 
 ### 安装到 Burp Suite
 
@@ -148,14 +148,14 @@ X-Timestamp: {{timestamp}}
 创建 `modify.groovy` 文件，内容如下：
 
 ```groovy
-def modify(Map<String, String> params) {
+def modifyArg(Map<String, String> params) {
     def name = params.keySet().iterator().next()
     def value = params.get(name)
     return "custom_" + value + "_" + System.currentTimeMillis()
 }
 ```
 
-在添加参数时选择 **auto update type** 为 `Groovy_CODE`，并指定脚本路径即可。
+在添加参数时选择 **auto update type** 为 `Groovy_CODE`，并指定脚本路径即可。Groovy 脚本中需定义 `modifyArg(Map<String, String>)` 方法。
 
 ---
 
@@ -185,12 +185,13 @@ def modify(Map<String, String> params) {
 
 ## 联系方式
 
-- GitHub Issues：[https://github.com/GitHubNull/environment/issues](https://github.com/GitHubNull/environment/issues)
+- GitHub Issues：[https://github.com/oxff/burp-environment/issues](https://github.com/oxff/burp-environment/issues)
 
 ---
 
 ## 相关文档
 
 - [使用教程](doc/tutorial.md)
+- [变更日志](doc/CHANGELOG.md)
 - [English README](README_EN.md)
 - [AGENT.md](AGENT.md)
