@@ -49,6 +49,18 @@ public class EnvironmentTab extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout());
 
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane.addTab("参数管理", createParamsPanel());
+        tabbedPane.addTab("关于", new AboutPanel());
+        tabbedPane.addTab("教程", new TutorialPanel());
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    private JPanel createParamsPanel() {
+        JPanel paramsPanel = new JPanel(new BorderLayout());
+
+        // --- NORTH: 按钮面板 + 搜索面板 ---
         JPanel northPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -79,24 +91,23 @@ public class EnvironmentTab extends JPanel {
         northPanel.add(buttonPanel, BorderLayout.CENTER);
         northPanel.add(searchPanel, BorderLayout.SOUTH);
 
-        add(northPanel, BorderLayout.NORTH);
+        paramsPanel.add(northPanel, BorderLayout.NORTH);
 
+        // --- CENTER: 数据表格 ---
         argTable = new JTable(argTableModel);
         sorter = new TableRowSorter<>(argTableModel);
         argTable.setRowSorter(sorter);
-        JScrollPane centerPanel = new JScrollPane(argTable);
-
-        // 启用多字段排序
         sorter.setSortsOnUpdates(true);
+        JScrollPane centerPanel = new JScrollPane(argTable);
+        paramsPanel.add(centerPanel, BorderLayout.CENTER);
 
-        add(centerPanel, BorderLayout.CENTER);
-
+        // --- SOUTH: 状态栏 ---
         JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
         JLabel statusLabel = new JLabel("Ready");
         southPanel.add(statusLabel);
+        paramsPanel.add(southPanel, BorderLayout.SOUTH);
 
-        add(southPanel, BorderLayout.SOUTH);
+        return paramsPanel;
     }
 
     private void initActionListener() {
